@@ -15,6 +15,7 @@ canvas {
 	right: 0;
 	bottom: 0;
 
+	/* Make sure to keep this in sync with src/menu.js:setVisible! */
 	display: flex;
 
 	align-items: center;

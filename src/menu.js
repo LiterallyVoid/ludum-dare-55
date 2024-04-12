@@ -1,5 +1,12 @@
 import * as sound from "./sound.js";
 
+const menuContainer = document.querySelector("#menu-container");
+
+export function setVisible(visible) {
+	// Make sure to keep this in sync with style.css:#menu-container!
+	menuContainer.style.display = visible ? "flex" : "none";
+}
+
 document.querySelector("#menu__sound-enabled")
 	.addEventListener("input", function() {
 	sound.setEnabled(this.checked);
