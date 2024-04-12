@@ -2,7 +2,7 @@ import * as sound from "./sound.js";
 
 const menuContainer = document.querySelector("#menu-container");
 
-export let visible = false;
+export let visible = true;
 
 export function setVisible(visible_) {
 	visible = visible_;
