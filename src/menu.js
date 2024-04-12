@@ -2,7 +2,11 @@ import * as sound from "./sound.js";
 
 const menuContainer = document.querySelector("#menu-container");
 
-export function setVisible(visible) {
+export let visible = false;
+
+export function setVisible(visible_) {
+	visible = visible_;
+
 	// Make sure to keep this in sync with style.css:#menu-container!
 	menuContainer.style.display = visible ? "flex" : "none";
 }
@@ -26,3 +30,15 @@ effectsVolumeSlider.addEventListener("input", function() {
 	sound.setEffectsVolume(+this.value);
 });
 
+window.onblur = () => {
+	setVisible(true);
+};
+
+window.addEventListener("keydown", (e) => {
+	if (e.key != "Escape" || !visible) return;
+
+	setVisible(false);
+
+	e.preventDefault();
+	e.stopPropagation();
+});
