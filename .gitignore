@@ -1,1 +1,4 @@
 *.mmpz.bak
+
+# Generated from MMPZ files by LMMS; I may commit these later.
+music/*.mp3
