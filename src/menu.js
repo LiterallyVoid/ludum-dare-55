@@ -35,9 +35,9 @@ window.onblur = () => {
 };
 
 window.addEventListener("keydown", (e) => {
-	if (e.key != "Escape" || !visible) return;
+	if (e.key != "Escape") return;
 
-	setVisible(false);
+	setVisible(!visible);
 
 	e.preventDefault();
 	e.stopPropagation();
