@@ -32,15 +32,84 @@ sound.playMusic("music/prejam-dontuse.mp3");
 
 let previous_frame = performance.now();
 
-class RepeaterTurret {
-	constructor(proto) {
+class Turret {
+	constructor(board, proto, relativePos, rotation) {
+		this.board = board;
 		this.proto = proto;
+
+		this.relativePos = relativePos;
+		this.rotation = rotation;
+
+		this.pos = [0, 0];
+
+		this.refire = 0;
+	}
+
+	update(delta) {
+		this.refire -= delta;
+	}
+
+	draw() {
+		drawImage(this.proto.image, [0.5, 0.5], this.pos, this.rotation * Math.PI * 0.5);
 	}
 }
 
-class ShockwaveTurret {
-	constructor(proto) {
+class RepeaterBullet {
+	constructor(board, proto, relativePos) {
+		this.board = board;
 		this.proto = proto;
+
+		this.pos = [0, 0];
+
+		this.relativePos = relativePos;
+	}
+
+	update(delta) {
+		this.pos = this.board.cellToGlobal(this.relativePos);
+	}
+
+	draw() {
+		ctx.fillRect(this.pos[0] - 5, this.pos[1] - 5, 10, 10);
+	}
+}
+
+class RepeaterTurret extends Turret {
+	constructor(board, proto, relativePos, rotation) {
+		super(board, proto, relativePos, rotation);
+	}
+
+	update(delta) {
+		super.update(delta);
+		if (this.refire < 0) {
+			this.refire += 0.3;
+			if (this.refire < 0) this.refire = 0;
+
+			this.board.spawn(new RepeaterBullet(this.board, {}, this.relativePos));
+		}
+	}
+
+	draw() {
+		super.draw();
+	}
+}
+
+class ShockwaveTurret extends Turret {
+	constructor(board, proto, relativePos, rotation) {
+		super(board, proto, relativePos, rotation);
+	}
+
+	update(delta) {
+		super.update(delta);
+		if (this.refire < 0) {
+			this.refire += 0.8;
+			if (this.refire < 0) this.refire = 0;
+
+			this.board.spawn(new Bullet({}, board));
+		}
+	}
+
+	draw() {
+		super.draw();
 	}
 }
 
@@ -95,9 +164,26 @@ class Board {
 		this.grid[5][3].backing = cellTypes.mountain;
 		this.grid[4][5].backing = cellTypes.mountain;
 		this.grid[2][2].backing = cellTypes.mountain;
+
+		this.entities = [];
+	}
+
+	spawn(ent) {
+		this.entities.push(ent);
 	}
 
 	update(delta) {
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				const ent = this.grid[x][y].entity;
+				if (ent == null) continue;
+
+				ent.pos = this.cellToGlobal([x, y]);
+				ent.update(delta);
+			}
+		}
+
+		this.entities = this.entities.filter(ent => (ent.update(delta), !ent.dead));
 	}
 
 	cell(pos) {
@@ -134,15 +220,6 @@ class Board {
 			this.height * this.cell_size,
 		);
 		ctx.clip();
-
-		for (let x = 0; x < this.width; x++) {
-			for (let y = 0; y < this.height; y++) {
-				const ent = this.grid[x][y].entity;
-				if (!ent) continue;
-
-				ent.pos = this.cellToGlobal([x, y]);
-			}
-		}
 	}
 
 	draw() {
@@ -162,7 +239,15 @@ class Board {
 				if (cell.backing != null && cell.backing.image) {
 					drawImage(cell.backing.image, [0.5, 0.5], pos, 0.0);
 				}
+
+				if (cell.entity != null) {
+					cell.entity.draw();
+				}
 			}
+		}
+
+		for (const entity of this.entities) {
+			entity.draw();
 		}
 	}
 }
@@ -195,6 +280,12 @@ class EventMouseDown {
 class EventMouseUp {
 	constructor(button) {
 		this.button = button;
+	}
+}
+
+class EventMouseWheel {
+	constructor(delta) {
+		this.delta = delta;
 	}
 }
 
@@ -244,6 +335,7 @@ function capture(obj) {
 
 function releaseCapture() {
 	event_capture = null;
+
 }
 
 function captured(obj) {
@@ -327,7 +419,7 @@ class PaletteEntry {
 
 		this.dragging = false;
 		this.dragPos = new SmoothVec(0);
-		this.dragAngle = new SmoothAngle(0);
+		this.dragAngle = new Smooth(0);
 
 		this.dragBoard = null;
 		this.dragBoardCell = null;
@@ -337,6 +429,10 @@ class PaletteEntry {
 	}
 
 	update(delta) {
+		if (this.dragging && !captured(this)) {
+			this.dragging = false;
+		}
+
 		if (!this.dragging && captured(this)) {
 			releaseCapture();
 		}
@@ -369,30 +465,50 @@ class PaletteEntry {
 				this.dragPos.set(this.pos);
 				this.dragAngle.set(0);
 
+				this.rotation = 0;
+				this.dragBoard = null;
+				this.dragBoardCell = null;
+
 				return true;
 			}
 
 			if (this.dragging) {
 				if (event instanceof EventKeyDown && event.key == "r") {
-					this.rotation = (this.rotation + 1) % 4;
+					this.rotation++;
 				}
 
-				// Wrap betwen 0 and 3, not between -3 and 3.
-				this.rotation = (this.rotation + 4) % 4;
+				if (event instanceof EventMouseWheel) {
+					if (event.delta[1] < 0) {
+						this.rotation--;
+					} else if (event.delta[1] > 0) {
+						this.rotation++;
+					}
+				}
 
 				if (!buildables[this.item].rotatable) {
 					this.rotation = 0;
 				}
 
+				if (this.rotation < 0) {
+					this.rotation += 4;
+					this.dragAngle.value += Math.PI * 2;
+				}
+				if (this.rotation >= 4) {
+					this.rotation -= 4;
+					this.dragAngle.value -= Math.PI * 2;
+				}
+
 				if (event instanceof EventMouseUp && event.button === 0) {
 					this.dragging = false;
+
+					this.tryPlace();
 				}
 			}
 		});
 
 		if (this.hover || this.dragging) {
 			cursor = "pointer";
-			this.popup.tick(delta, 20, 500.0, 17.0);
+			this.popup.tick(delta, 20, 500.0, 25.0);
 		} else {
 			this.popup.tick(delta, 0, 80.0, 8.0);
 		}
@@ -415,6 +531,25 @@ class PaletteEntry {
 			}
 			this.dragAngle.tick(delta, this.rotation * Math.PI * 0.5, 400.0, 25.0);
 		}
+	}
+
+	tryPlace() {
+		if (!this.dragBoard) return;
+		if (!this.dragBoardCell) return;
+
+		if (this.count <= 0) return;
+
+		const cell = this.dragBoard.cell(this.dragBoardCell);
+		if (!cell.backing.buildable) return;
+
+		if (cell.entity) return;
+
+		const buildable = buildables[this.item];
+
+		const entity = new buildable.cls(this.dragBoard, buildable, this.dragBoardCell, this.rotation);
+		cell.entity = entity;
+
+		this.count--;
 	}
 
 	draw() {
@@ -527,6 +662,8 @@ function tick(time) {
 	previous_frame = time;
 
 	cursor = "default";
+	event_capture_polled_this_frame = false;
+	const was_captured = event_capture != null;
 
 	update(menu.visible ? 0 : delta);
 
@@ -535,7 +672,7 @@ function tick(time) {
 	requestAnimationFrame(tick);
 
 	events = [];
-	if (!event_capture_polled_this_frame) {
+	if (was_captured && !event_capture_polled_this_frame && event_capture) {
 		event_capture = null;
 	}
 
@@ -561,4 +698,10 @@ window.addEventListener("keydown", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventKeyDown(e.key));
+});
+
+window.addEventListener("mousewheel", (e) => {
+	if (menu.visible) return;
+
+	events.push(new EventMouseWheel([e.deltaX, e.deltaY]));
 });
