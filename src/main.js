@@ -99,8 +99,8 @@ class RepeaterTurret extends Turret {
 			const angle = this.rotation * Math.PI * 0.5;
 
 			const bulletVelocity = [
-				Math.sin(angle) * 2.0,
-				-Math.cos(angle) * 2.0,
+				Math.sin(angle) * 3.0,
+				-Math.cos(angle) * 3.0,
 			];
 
 			this.board.spawn(new RepeaterBullet(this.board, {}, this, [...this.relativePos], bulletVelocity));
