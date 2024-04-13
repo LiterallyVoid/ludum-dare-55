@@ -1,19 +1,6 @@
 import * as sound from "./sound.js";
 import * as menu from "./menu.js";
-
-const canvas = document.querySelector("#canvas");
-
-const ctx = canvas.getContext("2d");
-
-function resizeCanvas() {
-	const dpr = window.devicePixelRatio ?? 1;
-
-	canvas.width = canvas.clientWidth * dpr;
-	canvas.height = canvas.clientHeight * dpr;
-}
-
-window.onresize = resizeCanvas;
-resizeCanvas();
+import { canvas, ctx } from "./gfx.js";
 
 sound.playMusic("music/prejam-dontuse.mp3"); 
 
