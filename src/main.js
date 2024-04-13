@@ -75,7 +75,7 @@ class Turret extends BoardEntity {
 
 		this.onGrid = true;
 
-		this.health = 2;
+		this.health = 3;
 		this.maxHealth = 3;
 	}
 
@@ -141,7 +141,7 @@ class RepeaterTurret extends Turret {
 	update(delta) {
 		super.update(delta);
 		if (this.refire < 0) {
-			this.refire += 0.2;
+			this.refire += 0.8;
 			if (this.refire < 0) this.refire = 0;
 
 			const angle = this.rotation * Math.PI * 0.5;
