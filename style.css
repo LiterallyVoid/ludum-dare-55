@@ -30,7 +30,8 @@ canvas {
 
 	margin: 15px;
 
-	width: 18rem;
+	flex-basis: 18rem;
+	flex-shrink: 1;
 }
 
 .menu > label {
@@ -38,4 +39,5 @@ canvas {
 	flex-direction: row;
 
 	justify-content: space-between;
+	flex-wrap: wrap;
 }
