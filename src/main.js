@@ -205,6 +205,12 @@ class GridCell {
 		// Flyweighted to `cellTypes`
 		this.backing = cellTypes.empty;
 		this.entity = null;
+
+		this.onTrack = false;
+	}
+
+	buildable() {
+		return !this.entity && this.backing.buildable && !this.onTrack;
 	}
 }
 
@@ -623,8 +629,7 @@ class PaletteEntry {
 
 			if (this.dragBoardCell) {
 				const cell = this.dragBoard.cell(this.dragBoardCell);
-				if (cell.entity) this.dragBoardCell = null;
-				if (!cell.backing.buildable) this.dragBoardCell = null;
+				if (!cell.buildable()) this.dragBoardCell = null;
 			}
 
 			if (this.dragBoardCell) {
@@ -643,9 +648,7 @@ class PaletteEntry {
 		if (this.count <= 0) return;
 
 		const cell = this.dragBoard.cell(this.dragBoardCell);
-		if (!cell.backing.buildable) return;
-
-		if (cell.entity) return;
+		if (!cell.buildable()) return;
 
 		const buildable = buildables[this.item];
 
