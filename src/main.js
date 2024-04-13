@@ -4,8 +4,28 @@ import { canvas, ctx } from "./gfx.js";
 
 let width, height;
 
+function img(path) {
+	const img = new Image();
+	img.src = path;
+
+	return img;
+}
+
 const cellTypes = {
-	empty: {},
+	empty: {
+		// Whether or not turrets can be built on this cell.
+		buildable: true,
+
+		// Whether or not things can fly over this cell.
+		fliable: true,
+	},
+
+	mountain: {
+		image: img("assets/mountain.svg"),
+
+		buildable: false,
+		fliable: false,
+	},
 };
 
 sound.playMusic("music/prejam-dontuse.mp3"); 
@@ -22,13 +42,6 @@ class ShockwaveTurret {
 	constructor(proto) {
 		this.proto = proto;
 	}
-}
-
-function img(path) {
-	const img = new Image();
-	img.src = path;
-
-	return img;
 }
 
 const buildables = {
@@ -55,7 +68,7 @@ const buildables = {
 class GridCell {
 	constructor() {
 		// Flyweighted to `cellTypes`
-		this.backing = null;
+		this.backing = cellTypes.empty;
 		this.entity = null;
 	}
 }
@@ -76,9 +89,19 @@ class Board {
 		}
 
 		this.cell_size = 64;
+
+		this.grid[0][0].backing = cellTypes.mountain;
+		this.grid[1][4].backing = cellTypes.mountain;
+		this.grid[5][3].backing = cellTypes.mountain;
+		this.grid[4][5].backing = cellTypes.mountain;
+		this.grid[2][2].backing = cellTypes.mountain;
 	}
 
 	update(delta) {
+	}
+
+	cell(pos) {
+		return this.grid[pos[0]][pos[1]];
 	}
 
 	globalToCell(global) {
@@ -111,16 +134,36 @@ class Board {
 			this.height * this.cell_size,
 		);
 		ctx.clip();
+
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				const ent = this.grid[x][y].entity;
+				if (!ent) continue;
+
+				ent.pos = this.cellToGlobal([x, y]);
+			}
+		}
 	}
 
 	draw() {
-		ctx.fillStyle = "#333";
+		ctx.fillStyle = "#010915";
 		ctx.fillRect(
 			this.pos[0] - this.width * this.cell_size * 0.5,
 			this.pos[1] - this.height * this.cell_size * 0.5,
 			this.width * this.cell_size,
 			this.height * this.cell_size,
 		);
+
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				const cell = this.grid[x][y];
+				let pos = this.cellToGlobal([x, y]);
+
+				if (cell.backing != null && cell.backing.image) {
+					drawImage(cell.backing.image, [0.5, 0.5], pos, 0.0);
+				}
+			}
+		}
 	}
 }
 
@@ -357,6 +400,13 @@ class PaletteEntry {
 		if (this.dragging) {
 			this.dragBoard = game.board;
 			this.dragBoardCell = this.dragBoard.globalToCell(mouse_position);
+
+			if (this.dragBoardCell) {
+				const cell = this.dragBoard.cell(this.dragBoardCell);
+				if (cell.entity) this.dragBoardCell = null;
+				if (!cell.backing.buildable) this.dragBoardCell = null;
+			}
+			
 
 			if (this.dragBoardCell) {
 				this.dragPos.tick(delta, this.dragBoard.cellToGlobal(this.dragBoardCell), 1200.0, 50.0);
