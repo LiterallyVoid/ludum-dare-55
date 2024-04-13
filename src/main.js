@@ -234,7 +234,7 @@ class Board {
 			ent.update(delta);
 			if (ent.dead) {
 				if (ent.onGrid) {
-					const cell = this.cell(ent.relativePosition);
+					const cell = this.cell(ent.relativePos);
 					
 					if (cell.entity === ent) cell.entity = null;
 				}
