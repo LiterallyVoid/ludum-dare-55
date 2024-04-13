@@ -55,20 +55,32 @@ class Turret {
 }
 
 class RepeaterBullet {
-	constructor(board, proto, relativePos) {
+	constructor(board, proto, controller, relativePos, velocity) {
 		this.board = board;
 		this.proto = proto;
 
 		this.pos = [0, 0];
 
+		this.controller = controller;
+
 		this.relativePos = relativePos;
+		this.velocity = velocity;
 	}
 
 	update(delta) {
+		this.relativePos[0] += this.velocity[0] * delta;
+		this.relativePos[1] += this.velocity[1] * delta;
+
+		const cell = this.board.cell(this.relativePos);
+
+		if (!cell.backing.fliable) this.dead = true;
+		if (cell.entity && cell.entity !== this.controller) this.dead = true;
+		
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
 
 	draw() {
+		ctx.fillStyle = "#F0F";
 		ctx.fillRect(this.pos[0] - 5, this.pos[1] - 5, 10, 10);
 	}
 }
@@ -84,7 +96,14 @@ class RepeaterTurret extends Turret {
 			this.refire += 0.3;
 			if (this.refire < 0) this.refire = 0;
 
-			this.board.spawn(new RepeaterBullet(this.board, {}, this.relativePos));
+			const angle = this.rotation * Math.PI * 0.5;
+
+			const bulletVelocity = [
+				Math.sin(angle) * 2.0,
+				-Math.cos(angle) * 2.0,
+			];
+
+			this.board.spawn(new RepeaterBullet(this.board, {}, this, [...this.relativePos], bulletVelocity));
 		}
 	}
 
@@ -187,6 +206,14 @@ class Board {
 	}
 
 	cell(pos) {
+		pos = [
+			Math.round(pos[0]),
+			Math.round(pos[1]),
+		];
+
+		if (pos[0] < 0 || pos[0] >= this.width) return;
+		if (pos[1] < 0 || pos[1] >= this.height) return;
+		
 		return this.grid[pos[0]][pos[1]];
 	}
 
