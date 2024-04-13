@@ -20,7 +20,7 @@ canvas {
 	align-items: center;
 	justify-content: center;
 
-	background-color: #FFFFFF80;
+	background-color: #22222280;
 }
 
 .menu {
@@ -31,6 +31,14 @@ canvas {
 
 	flex-basis: 18rem;
 	flex-shrink: 1;
+
+	color: #FFF;
+
+	font-family: "Inter", sans-serif;
+}
+
+.menu > h1 {
+	text-align: center;
 }
 
 .menu > label {

@@ -32,20 +32,34 @@ sound.playMusic("music/prejam-dontuse.mp3");
 
 let previous_frame = performance.now();
 
-class Turret {
-	constructor(board, proto, relativePos, rotation) {
+class BoardEntity {
+	constructor(board, relativePos, radius) {
 		this.board = board;
-		this.proto = proto;
-
 		this.relativePos = relativePos;
-		this.rotation = rotation;
-
 		this.pos = [0, 0];
 
-		this.refire = 0;
+		this.radius = radius;
 	}
 
 	update(delta) {
+		this.pos = this.board.cellToGlobal(this.relativePos);
+	}
+}
+
+class Turret extends BoardEntity {
+	constructor(board, proto, relativePos, rotation) {
+		super(board, relativePos, 0.5);
+
+		this.proto = proto;
+		this.rotation = rotation;
+
+		this.refire = 0;
+
+		this.onGrid = true;
+	}
+
+	update(delta) {
+		super.update(delta);
 		this.refire -= delta;
 	}
 
@@ -54,27 +68,35 @@ class Turret {
 	}
 }
 
-class RepeaterBullet {
+class RepeaterBullet extends BoardEntity {
 	constructor(board, proto, controller, relativePos, velocity) {
-		this.board = board;
+		super(board, relativePos, 0.05);
 		this.proto = proto;
-
-		this.pos = [0, 0];
 
 		this.controller = controller;
 
-		this.relativePos = relativePos;
 		this.velocity = velocity;
 	}
 
 	update(delta) {
+		super.update(delta);
+
 		this.relativePos[0] += this.velocity[0] * delta;
 		this.relativePos[1] += this.velocity[1] * delta;
 
 		const cell = this.board.cell(this.relativePos);
+		if (!cell) this.dead = true;
 
 		if (!cell.backing.fliable) this.dead = true;
-		if (cell.entity && cell.entity !== this.controller) this.dead = true;
+
+		for (const entity of this.board.entitiesNear(this.relativePos, this.radius)) {
+			if (entity === this.controller) continue;
+			if (entity === this) continue;
+
+			// entity.damage();
+
+			this.dead = true;
+		}
 		
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
@@ -119,11 +141,10 @@ class ShockwaveTurret extends Turret {
 
 	update(delta) {
 		super.update(delta);
+
 		if (this.refire < 0) {
 			this.refire += 0.8;
 			if (this.refire < 0) this.refire = 0;
-
-			this.board.spawn(new Bullet({}, board));
 		}
 	}
 
@@ -189,20 +210,28 @@ class Board {
 
 	spawn(ent) {
 		this.entities.push(ent);
+
+		if (ent.onGrid) {
+			this.cell(ent.relativePos).entity = ent;
+		}
 	}
 
 	update(delta) {
-		for (let x = 0; x < this.width; x++) {
-			for (let y = 0; y < this.height; y++) {
-				const ent = this.grid[x][y].entity;
-				if (ent == null) continue;
+		for (let i = 0; i < this.entities.length; i++) {
+			const ent = this.entities[i];
 
-				ent.pos = this.cellToGlobal([x, y]);
-				ent.update(delta);
+			ent.update(delta);
+			if (ent.dead) {
+				if (ent.onGrid) {
+					const cell = this.cell(ent.relativePosition);
+					
+					if (cell.entity === ent) cell.entity = null;
+				}
+				this.entities.splice(i, 1);
+				i--;
+				continue;
 			}
 		}
-
-		this.entities = this.entities.filter(ent => (ent.update(delta), !ent.dead));
 	}
 
 	cell(pos) {
@@ -249,6 +278,27 @@ class Board {
 		ctx.clip();
 	}
 
+	entitiesNear(point, radius) {
+		const result = [];
+
+		for (const entity of this.entities) {
+			const positionDiff = [
+				point[0] - entity.relativePos[0],
+				point[1] - entity.relativePos[1],
+			];
+
+			const distanceSquared =
+				Math.pow(positionDiff[0], 2)
+			  + Math.pow(positionDiff[1], 2);
+
+			if (distanceSquared < Math.pow(radius + entity.radius, 2)) {
+				result.push(entity);
+			}
+		}
+
+		return result;
+	}
+
 	draw() {
 		ctx.fillStyle = "#010915";
 		ctx.fillRect(
@@ -265,10 +315,6 @@ class Board {
 
 				if (cell.backing != null && cell.backing.image) {
 					drawImage(cell.backing.image, [0.5, 0.5], pos, 0.0);
-				}
-
-				if (cell.entity != null) {
-					cell.entity.draw();
 				}
 			}
 		}
@@ -549,7 +595,6 @@ class PaletteEntry {
 				if (cell.entity) this.dragBoardCell = null;
 				if (!cell.backing.buildable) this.dragBoardCell = null;
 			}
-			
 
 			if (this.dragBoardCell) {
 				this.dragPos.tick(delta, this.dragBoard.cellToGlobal(this.dragBoardCell), 1200.0, 50.0);
@@ -574,7 +619,8 @@ class PaletteEntry {
 		const buildable = buildables[this.item];
 
 		const entity = new buildable.cls(this.dragBoard, buildable, this.dragBoardCell, this.rotation);
-		cell.entity = entity;
+
+		this.dragBoard.spawn(entity);
 
 		this.count--;
 	}
