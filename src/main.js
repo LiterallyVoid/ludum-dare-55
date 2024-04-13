@@ -54,8 +54,8 @@ class Board {
 	constructor() {
 		this.pos = [0, 0];
 
-		this.width = 8;
-		this.height = 8;
+		this.width = 6;
+		this.height = 6;
 		this.grid = [];
 
 		for (let x = 0; x < this.width; x++) {
