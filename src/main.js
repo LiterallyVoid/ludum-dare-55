@@ -39,9 +39,12 @@ class BoardEntity {
 		this.pos = [0, 0];
 
 		this.radius = radius;
+
+		this.dead = false;
 	}
 
 	update(delta) {
+		if (this.health <= 0) this.dead = true;
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
 
@@ -49,7 +52,14 @@ class BoardEntity {
 		if (!this.maxHealth) return;
 
 		ctx.save();
-		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.translate(this.pos[0], this.pos[1] - this.radius * this.board.cell_size);
+		
+		for (let i = 0; i < this.maxHealth; i++) {
+			const x = (i - this.maxHealth * 0.5 + 0.5) * 12;
+			ctx.fillStyle = i < this.health ? "#3F3" : "#F35";
+			ctx.fillRect(x - 5, -5, 10, 5);
+		}
+
 		ctx.restore();
 	}
 }
@@ -65,7 +75,7 @@ class Turret extends BoardEntity {
 
 		this.onGrid = true;
 
-		this.health = 3;
+		this.health = 2;
 		this.maxHealth = 3;
 	}
 
@@ -104,7 +114,9 @@ class RepeaterBullet extends BoardEntity {
 			if (entity === this.controller) continue;
 			if (entity === this) continue;
 
-			// entity.damage();
+			if (entity.health) {
+				entity.health--;
+			}
 
 			this.dead = true;
 		}
