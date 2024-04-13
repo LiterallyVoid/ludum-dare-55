@@ -651,6 +651,9 @@ class PaletteEntry {
 		this.dragBoard.spawn(entity);
 
 		this.count--;
+
+		this.popup.value = -100;
+		this.popup.velocity = 200;
 	}
 
 	draw() {
