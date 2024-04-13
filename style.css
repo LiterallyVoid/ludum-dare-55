@@ -3,6 +3,10 @@ html, body {
 	overflow: hidden;
 }
 
+canvas {
+	background-color: #000;
+}
+
 #menu-container {
 	position: absolute;
 	top: 0;
@@ -16,7 +20,7 @@ html, body {
 	align-items: center;
 	justify-content: center;
 
-	background-color: #00000030;
+	background-color: #FFFFFF80;
 }
 
 .menu {

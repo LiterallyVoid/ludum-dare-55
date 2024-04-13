@@ -6,3 +6,16 @@ MUSIC_FILES = $(MUSIC_SOURCES:%.mmpz=%.mp3)
 
 
 all: $(MUSIC_FILES)
+
+dist: $(MUSIC_FILES)
+	mkdir -p dist/
+
+	cp index.html dist/
+	cp style.css dist/
+	cp src/ dist/ -r
+	cp assets/ dist/ -r
+
+	mkdir -p dist/music/
+	cp $(MUSIC_FILES) dist/music/
+
+.PHONY: dist
