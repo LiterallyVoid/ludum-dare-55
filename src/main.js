@@ -206,6 +206,33 @@ const buildables = {
 	},
 };
 
+class EnemyBat extends BoardEntity {
+	constructor(board, relativePos) {
+		super(board, relativePos, 0.4);
+
+		this.velocity = [0, 0];
+
+		this.health = 2;
+		this.maxHealth = 2;
+	}
+
+	update(delta) {
+		super.update(delta);
+	}
+
+	draw() {
+		ctx.save();
+		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.beginPath();
+		ctx.arc(0, 0, 15, 0, Math.PI * 2);
+
+		ctx.strokeStyle = "#F93";
+		ctx.lineWidth = 5;
+		ctx.stroke();
+		ctx.restore();
+	}
+}
+
 class GridCell {
 	constructor() {
 		// Flyweighted to `cellTypes`
