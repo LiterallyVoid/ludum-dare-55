@@ -106,7 +106,10 @@ class RepeaterBullet extends BoardEntity {
 		this.relativePos[1] += this.velocity[1] * delta;
 
 		const cell = this.board.cell(this.relativePos);
-		if (!cell) this.dead = true;
+		if (!cell) {
+			this.dead = true;
+			return;
+		}
 
 		if (!cell.backing.fliable) this.dead = true;
 
