@@ -115,14 +115,14 @@ class RepeaterTurret extends Turret {
 	update(delta) {
 		super.update(delta);
 		if (this.refire < 0) {
-			this.refire += 0.3;
+			this.refire += 0.2;
 			if (this.refire < 0) this.refire = 0;
 
 			const angle = this.rotation * Math.PI * 0.5;
 
 			const bulletVelocity = [
-				Math.sin(angle) * 3.0,
-				-Math.cos(angle) * 3.0,
+				Math.sin(angle) * 4.0,
+				-Math.cos(angle) * 4.0,
 			];
 
 			this.board.spawn(new RepeaterBullet(this.board, {}, this, [...this.relativePos], bulletVelocity));
