@@ -11,6 +11,12 @@ function img(path) {
 	return img;
 }
 
+function moveTowards(from, to, step) {
+	if (from < to) return Math.min(from + step, to);
+	if (from > to) return Math.max(from - step, to);
+	return to;
+}
+
 const cellTypes = {
 	empty: {
 		// Whether or not turrets can be built on this cell.
@@ -231,13 +237,58 @@ class Board {
 
 		this.cell_size = 64;
 
-		this.grid[0][0].backing = cellTypes.mountain;
-		this.grid[1][4].backing = cellTypes.mountain;
-		this.grid[5][3].backing = cellTypes.mountain;
-		this.grid[4][5].backing = cellTypes.mountain;
-		this.grid[2][2].backing = cellTypes.mountain;
-
 		this.entities = [];
+
+		this.enemyTrack = [];
+
+		const trackTemperature = 1.0;
+
+		let previous_x = Math.floor(Math.random() * this.width);
+
+		// `enemyTrack` goes from top to bottom.
+		for (let y = 0; y <= this.height; y++) {
+			let x = previous_x;
+			
+			if (Math.random() > trackTemperature) {
+				x += Math.round((Math.random() * 6 - 3) * trackTemperature)
+				x = Math.max(0, Math.min(this.width - 1, x));
+			} else {
+				x = Math.floor(Math.random() * this.width);
+			}
+
+			if (y > 0) {
+				for (let path_x = moveTowards(previous_x, x, 1);; path_x = moveTowards(path_x, x, 1)) {
+					this.enemyTrack.push([path_x, y - 1]);
+
+					if (path_x === x) break;
+				}
+			}
+
+			if (y == 0) {
+				this.enemyTrack.push([x, y - 1]);
+			}
+			this.enemyTrack.push([x, y]);
+
+			previous_x = x;
+		}
+
+		for (const item of this.enemyTrack) {
+			const cell = this.cell(item);
+			if (!cell) continue;
+
+			cell.onTrack = true;
+		}
+
+		const fillProb = 0.3;
+
+		for (let x = 0; x < this.width; x++) {
+			for (let y = 0; y < this.height; y++) {
+				if (this.grid[x][y].onTrack) continue;
+				if (Math.random() < fillProb) {
+					this.grid[x][y].backing = cellTypes.mountain;
+				}
+			}
+		}
 	}
 
 	spawn(ent) {
@@ -339,6 +390,15 @@ class Board {
 			this.width * this.cell_size,
 			this.height * this.cell_size,
 		);
+
+		ctx.beginPath();
+		ctx.moveTo(...this.cellToGlobal(this.enemyTrack[0]));
+		for (const pos of this.enemyTrack) {
+			ctx.lineTo(...this.cellToGlobal(pos));
+		}
+		ctx.strokeStyle = "#F80";
+		ctx.lineWidth = 15;
+		ctx.stroke();
 
 		for (let x = 0; x < this.width; x++) {
 			for (let y = 0; y < this.height; y++) {
