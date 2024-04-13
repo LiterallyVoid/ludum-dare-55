@@ -44,6 +44,14 @@ class BoardEntity {
 	update(delta) {
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
+
+	drawHealthbar() {
+		if (!this.maxHealth) return;
+
+		ctx.save();
+		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.restore();
+	}
 }
 
 class Turret extends BoardEntity {
@@ -56,6 +64,9 @@ class Turret extends BoardEntity {
 		this.refire = 0;
 
 		this.onGrid = true;
+
+		this.health = 3;
+		this.maxHealth = 3;
 	}
 
 	update(delta) {
@@ -321,6 +332,11 @@ class Board {
 
 		for (const entity of this.entities) {
 			entity.draw();
+		}
+
+		// Draw healthbars on a separate layer.
+		for (const entity of this.entities) {
+			entity.drawHealthbar();
 		}
 	}
 }
