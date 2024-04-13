@@ -1,6 +1,6 @@
 import * as sound from "./sound.js";
 
-const menuContainer = document.querySelector("#menu-container");
+const menu_container = document.querySelector("#menu-container");
 
 export let visible = true;
 
@@ -8,7 +8,7 @@ export function setVisible(visible_) {
 	visible = visible_;
 
 	// Make sure to keep this in sync with style.css:#menu-container!
-	menuContainer.style.display = visible ? "flex" : "none";
+	menu_container.style.display = visible ? "flex" : "none";
 }
 
 document.querySelector("#menu__sound-enabled")
@@ -16,17 +16,17 @@ document.querySelector("#menu__sound-enabled")
 	sound.setEnabled(this.checked);
 });
 
-const musicVolumeSlider = document.querySelector("#menu__music-volume");
-const effectsVolumeSlider = document.querySelector("#menu__effects-volume");
+const music_volume_slider = document.querySelector("#menu__music-volume");
+const effects_volume_slider = document.querySelector("#menu__effects-volume");
 
-sound.setMusicVolume(+musicVolumeSlider.value);
-sound.setEffectsVolume(+effectsVolumeSlider.value);
+sound.setMusicVolume(+music_volume_slider.value);
+sound.setEffectsVolume(+effects_volume_slider.value);
 
-musicVolumeSlider.addEventListener("input", function() {
+music_volume_slider.addEventListener("input", function() {
 	sound.setMusicVolume(+this.value);
 });
 
-effectsVolumeSlider.addEventListener("input", function() {
+effects_volume_slider.addEventListener("input", function() {
 	sound.setEffectsVolume(+this.value);
 });
 

@@ -1,10 +1,10 @@
 const context = new AudioContext();
 
-const allMusicGain = context.createGain();
-allMusicGain.connect(context.destination);
+const all_music_gain = context.createGain();
+all_music_gain.connect(context.destination);
 
-const allEffectsGain = context.createGain();
-allEffectsGain.connect(context.destination);
+const all_effects_gain = context.createGain();
+all_effects_gain.connect(context.destination);
 
 // A single music track, looped.
 // Starts playing on instantiation, and plays until `stop` is called.
@@ -18,7 +18,7 @@ class PlayingMusic {
 		this.gain = context.createGain();
 
 		this.source.connect(this.gain);
-		this.gain.connect(allMusicGain);
+		this.gain.connect(all_music_gain);
 	}
 
 	start() {
@@ -64,11 +64,11 @@ function setGlobalGainNodeVolume(node, volume) {
 }
 
 export function setMusicVolume(volume) {
-	setGlobalGainNodeVolume(allMusicGain, volume);
+	setGlobalGainNodeVolume(all_music_gain, volume);
 }
 
 export function setEffectsVolume(volume) {
-	setGlobalGainNodeVolume(allEffectsGain, volume);
+	setGlobalGainNodeVolume(all_effects_gain, volume);
 }
 
 export function playSound(path) {
