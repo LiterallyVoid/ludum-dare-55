@@ -62,8 +62,18 @@ class BoardEntity {
 		
 		for (let i = 0; i < this.maxHealth; i++) {
 			const x = (i - this.maxHealth * 0.5 + 0.5) * 12;
-			ctx.fillStyle = i < this.health ? "#3F3" : "#F35";
+
+			const frac = Math.max(0, Math.min(1, this.health - i));
+
+			ctx.fillStyle = "#F35";
 			ctx.fillRect(x - 5, -5, 10, 5);
+
+			if (frac == 0) {
+				continue;
+			}
+
+			ctx.fillStyle = "#3F3";
+			ctx.fillRect(x - 5, -5, 10 * frac, 5);
 		}
 
 		ctx.restore();
