@@ -388,7 +388,7 @@ class Board {
 				x = Math.floor(Math.random() * this.width);
 			}
 
-			if (y > 0) {
+			if (y > 0 && x != previous_x) {
 				for (let path_x = moveTowards(previous_x, x, 1);; path_x = moveTowards(path_x, x, 1)) {
 					this.enemyTrack.push([path_x, y - 1]);
 
