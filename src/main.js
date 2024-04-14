@@ -38,7 +38,7 @@ const cellTypes = {
 	},
 };
 
-sound.playMusic("music/prejam-dontuse.mp3"); 
+sound.playMusic("music/action.mp3"); 
 
 class BoardEntity {
 	constructor(board, relativePos, radius) {

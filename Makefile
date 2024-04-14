@@ -1,4 +1,4 @@
-MUSIC_SOURCES = music/prejam-dontuse.mmpz
+MUSIC_SOURCES = music/prejam-dontuse.mmpz music/action.mmpz
 MUSIC_FILES = $(MUSIC_SOURCES:%.mmpz=%.mp3)
 
 SOUND_SOURCES = \
@@ -12,7 +12,7 @@ SOUND_SOURCES = \
 
 SOUND_FILES = $(SOUND_SOURCES:%.mmpz=%.mp3)
 
-LMMSFLAGS ?= -b 64 -l
+LMMSFLAGS ?= -b 128 -l
 
 %.mp3: %.mmpz
 	lmms render $^ -f mp3 -o $@ $(LMMSFLAGS)
