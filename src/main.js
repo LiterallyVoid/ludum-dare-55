@@ -220,6 +220,34 @@ class BuildableReturnEffect {
 	}
 }
 
+class BoardPopupEffect {
+	constructor() {
+		this.time = 0;
+	}
+
+	update(delta) {
+		this.time += delta;
+		if (this.time > 5) this.dead = true;
+	}
+
+	draw() {
+		ctx.save();
+		ctx.fillStyle = "#5CF";
+
+		for (let i = 0; i < 5; i++) {
+			const frac = (this.time - i * 0.3) / 0.5;
+			if (frac < 0 || frac > 1) continue;
+
+			const x = (1.0 - Math.pow(1 - frac, 3)) * 200;
+			const w = (1 - Math.pow(frac, 2)) * 40;
+
+			ctx.fillRect(width - x - w * 0.5, 0, w, height);
+		}
+
+		ctx.restore();
+	}
+}
+
 class BannerEffect {
 	constructor(board, text) {
 		this.board = board;
@@ -725,8 +753,7 @@ class GridCell {
 	}
 }
 
-class Board {
-	constructor(game, animation, animation_time) {
+class Board { constructor(game, animation, animation_time) {
 		this.pos = [0, 0];
 		this.game = game;
 
@@ -847,6 +874,7 @@ class Board {
 
 		// Reversed, we're going to spawn enemies going from the *end* to avoid needless copying (when popping from the front.)
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
+		this.enemies_to_spawn = [];
 
 		this.game_over = false;
 		this.game_over_lost = false;
@@ -856,9 +884,16 @@ class Board {
 
 		// Set from `update`, used from `draw`.
 		this.fade = 0;
+
+		// Used for game over detection
+		this.has_turrets = false;
 	}
 
 	spawn(ent) {
+		if (ent instanceof Turret) {
+			this.has_turrets = true;
+		}
+
 		this.entities.push(ent);
 
 		if (ent.onGrid) {
@@ -965,6 +1000,7 @@ class Board {
 		}
 
 		this.game.addToken();
+		this.game.addScore(1);
 
 		this.animation = ["up", "out"];
 		this.animation_time = -3;
@@ -1563,6 +1599,8 @@ class Game {
 		this.level = 0;
 
 		this.board_slots.push(new Board(this, ["up", "in"], 0));
+
+		this.lost = false;
 	}
 
 	addScore(count) {
@@ -1591,8 +1629,34 @@ class Game {
 		};
 	}
 
+	desired_slots() {
+		let count = 1;
+		if (this.level >= 2) {
+			count++;
+		}
+		if (this.level >= 6) {
+			count++;
+		}
+		if (this.level >= 12) {
+			count++;
+		}
+
+		return count;
+	}
+
 	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
 	update(delta) {
+		this.lost = true;
+
+		for (const item of this.palette.deck) {
+			if (item.count > 0) this.lost = false;
+		}
+
+		for (const board of this.board_slots) {
+			if (!board) continue;
+			if (board.has_turrets) this.lost = false;
+		}
+		
 		this.palette.pos = [width / 2, height];
 		this.palette.update(delta);
 
@@ -1619,7 +1683,7 @@ class Game {
 			}
 
 			if (board.game_over_time > 1) {
-				this.level += 1 / this.board_slots.length;
+				this.level += 1 / this.desired_slots();
 
 				// FINAL MAXIMUM SCORE
 				if (this.level >= 15) {
@@ -1627,13 +1691,13 @@ class Game {
 					continue;
 				}
 
+				if (this.lost) {
+					continue;
+				}
+
 				// Play the same animation as the board we just replaced.
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
-
-				if (!board.game_over_lost) {
-					this.addScore(1);
-				}
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
@@ -1642,18 +1706,10 @@ class Game {
 			i++;
 		}
 		
-		let desired_slots = 1;
-		if (this.level >= 2) {
-			desired_slots++;
-		}
-		if (this.level >= 6) {
-			desired_slots++;
-		}
-		if (this.level >= 12) {
-			desired_slots++;
-		}
+		let desired_slots = this.desired_slots();
 		if (this.board_slots.length < desired_slots) {
 			this.board_slots.push(new Board(this, ["up", "in"], 0));
+			this.effects.push(new BoardPopupEffect());
 		}
 
 		poll(this, (event) => {
@@ -1669,6 +1725,7 @@ class Game {
 				if (event.key === "F3") this.removeToken();
 				if (event.key === "F4") this.addScore(50823);
 				if (event.key === "F5") this.board_slots[0].onLost();
+				if (event.key === "F6") this.level++;
 			}
 
 			if (event instanceof EventMouseMove) {
@@ -1788,7 +1845,7 @@ class Game {
 
 		ctx.font = "Bold 30px sans";
 		ctx.fillStyle = "#FFF";
-		ctx.fillText(`${this.score.toLocaleString()}`, -25, 40);
+		ctx.fillText(`${this.score.toLocaleString()} levels cleared`, -50, 40);
 
 		ctx.restore();
 
