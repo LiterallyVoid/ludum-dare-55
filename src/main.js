@@ -777,7 +777,7 @@ class Board {
 			cell.onTrack = true;
 		}
 
-		const fillProb = Math.random() * 0.4;
+		const fillProb = Math.random() * 0.25 + 0.05;
 
 		for (let x = 0; x < this.width; x++) {
 			for (let y = 0; y < this.height; y++) {
@@ -1531,7 +1531,7 @@ class Game {
 
 		this.hover = false;
 
-		this.tokens = 5;
+		this.tokens = 3;
 		this.max_tokens = 5;
 
 		this.token_timers = [];
@@ -1610,7 +1610,7 @@ class Game {
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
 
-				this.level++;
+				this.level += 1 / this.board_slots.length;
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
@@ -1620,13 +1620,13 @@ class Game {
 		}
 		
 		let desired_slots = 1;
-		if (this.level > 3) {
+		if (this.level >= 2) {
 			desired_slots++;
 		}
-		if (this.level > 8) {
+		if (this.level >= 4) {
 			desired_slots++;
 		}
-		if (this.level > 20) {
+		if (this.level >= 8) {
 			desired_slots++;
 		}
 		if (this.board_slots.length < desired_slots) {
