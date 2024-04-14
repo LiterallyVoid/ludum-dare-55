@@ -31,8 +31,8 @@ effects_volume_slider.addEventListener("input", function() {
 });
 
 window.onblur = () => {
-	// MAKE SURE THIS IS CHANGED FOR RELEASE
-	// setVisible(true);
+	// @TODO MAKE SURE THIS IS CHANGED FOR RELEASE
+	setVisible(true);
 };
 
 window.addEventListener("keydown", (e) => {

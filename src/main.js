@@ -1316,17 +1316,20 @@ class Game {
 		for (let i = 0; i < this.max_tokens; i++) {
 			this.token_timers.push({sign: 1, time: 99});
 		}
+
+		this.token_image = img("assets/token-held.svg");
+		this.token_image_outline = img("assets/token-outline.svg");
 	}
 
 	addToken() {
 		// Don't let tokens go above zero again.
 		if (this.tokens <= 0 || this.tokens >= this.max_tokens) return;
 
-		this.tokens++;
 		this.token_timers[this.tokens] = {
 			sign: 1,
 			time: 0,
 		};
+		this.tokens++;
 	}
 
 	removeToken() {
@@ -1384,6 +1387,12 @@ class Game {
 				this.hover = false;
 			}
 
+			// @TODO remove before jam end!!!!!! (very important)
+			if (event instanceof EventKeyDown) {
+				if (event.key === "F2") this.addToken();
+				if (event.key === "F3") this.removeToken();
+			}
+
 			if (event instanceof EventMouseMove) {
 				if (this.panning) {
 					this.boards_pan.value -= event.relative[0];
@@ -1418,6 +1427,11 @@ class Game {
 		if (this.panning) {
 			cursor = "grabbing";
 		}
+
+		for (const timer of this.token_timers) {
+			timer.time += delta * 2;
+			timer.time = Math.min(1, timer.time);
+		}
 	}
 
 	draw() {
@@ -1438,7 +1452,50 @@ class Game {
 		ctx.font = "20px sans";
 		ctx.fillStyle = "#FFF";
 		ctx.fillText(`${this.tokens}/${this.max_tokens}`, -5, 5);
+
+		for (let i = 0; i < this.max_tokens; i++) {
+			const timer = this.token_timers[i];
+
+			ctx.save();
+			ctx.translate(-40, 40);
+
+			drawImage(this.token_image_outline, [0.5, 0.5], [0.0, 0.0], 0.0);
+
+			if (timer.time < 1) {
+				if (timer.sign < 0) {
+					ctx.globalAlpha = 1.0 - Math.pow(timer.time, 2);
+					let s = (1.0 - (Math.pow(timer.time, 2)));
+					ctx.scale(s, s);
+				}
+
+				if (timer.sign > 0) {
+					let s = 1 + (1.0 - (Math.pow(timer.time, 2)));
+					s *= (1.0 - Math.pow(timer.time, 6)) * 0.4 + 1.0;
+					ctx.scale(s, s);
+
+					const wipe = 30 * ((1.0 - Math.pow(1.0 - timer.time, 5.0)) * 2 - 1);
+
+					ctx.beginPath();
+					ctx.moveTo(-80 + wipe, 80 + wipe);
+					ctx.lineTo(80 + wipe, -80 + wipe);
+					ctx.lineTo(0, -500);
+					ctx.lineTo(-500, 0);
+					ctx.closePath();
+					ctx.clip();
+				}
+			}
+
+			if (timer.time < 1 || i < this.tokens) {
+				drawImage(this.token_image, [0.5, 0.5], [0.0, 0.0], 0.0);
+			}
+
+			ctx.restore();
+
+			ctx.translate(-70, 0);
+		}
+
 		ctx.restore();
+
 	}
 }
 
@@ -1504,6 +1561,7 @@ window.addEventListener("keydown", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventKeyDown(e.key));
+	if (!e.altKey && !e.ctrlKey && !e.metaKey) e.preventDefault();
 });
 
 window.addEventListener("mousewheel", (e) => {
