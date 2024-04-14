@@ -1668,8 +1668,8 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 9),
-			new PaletteEntry("shockwave", 9),
+			new PaletteEntry("repeater", 3),
+			new PaletteEntry("shockwave", 3),
 		];
 
 		this.pos = [0, 0];
@@ -1870,6 +1870,11 @@ class Game {
 		if (!this.lost && this.board_slots.length < desired_slots) {
 			this.board_slots.push(new Board(this, ["up", "in"], 0));
 			this.effects.push(new BoardPopupEffect());
+
+			for (const item of this.palette.deck) {
+				item.count_pop = 1;
+				item.count += 2;
+			}
 		}
 
 		menu.setLost(this.over());
