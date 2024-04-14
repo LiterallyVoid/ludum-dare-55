@@ -17,6 +17,10 @@ function moveTowards(from, to, step) {
 	return to;
 }
 
+function angleWrap(angle) {
+	const tau = Math.PI * 2;
+	return ((angle + Math.PI) % tau + tau) % tau - Math.PI;
+}
 const cellTypes = {
 	empty: {
 		// Whether or not turrets can be built on this cell.
@@ -403,12 +407,19 @@ class Enemy extends BoardEntity {
 			return;
 		}
 
+		const next_next_waypoint = this.board.enemyTrack[this.next_waypoint_index + 1] ?? [next_waypoint[0], next_waypoint[1] + 1];
+
 		const vec = [
 			next_waypoint[0] - current_waypoint[0],
 			next_waypoint[1] - current_waypoint[1],
 		];
 
 		this.angle_forwards = Math.atan2(vec[0], -vec[1]);
+
+		const next_angle_forwards = Math.atan2(
+			next_next_waypoint[0] - next_waypoint[0],
+			-(next_next_waypoint[1] - next_waypoint[1]),
+		);
 
 		const len = Math.hypot(vec[0], vec[1]);
 		vec[0] /= len; vec[1] /= len;
@@ -420,6 +431,10 @@ class Enemy extends BoardEntity {
 
 		const pending = next_dot - here_dot;
 
+		if (pending < 0.3) {
+			this.angle_forwards += angleWrap(next_angle_forwards - this.angle_forwards) * (1.0 - pending / 0.3);
+		}
+
 		if (movement_this_frame > pending) {
 			movement_this_frame = pending;
 			this.next_waypoint_index++;
@@ -430,6 +445,9 @@ class Enemy extends BoardEntity {
 	}
 
 	chooseTarget(radius) {
+		// Don't let enemies do anything until they've properly found their place in the world.
+		if (this.next_waypoint_index < 2) return null;
+
 		let min_dist = 0;
 		let min_ent = null;
 		for (const ent of this.board.entitiesNear(this.relativePos, radius)) {
@@ -598,7 +616,7 @@ class Board {
 		this.game = game;
 
 		this.width = 6;
-		this.height = 6;
+		this.height = 8;
 		this.grid = [];
 
 		for (let x = 0; x < this.width; x++) {
@@ -623,11 +641,13 @@ class Board {
 		for (let y = 0; y <= this.height; y++) {
 			let x = previous_x;
 			
-			if (Math.random() > trackTemperature) {
-				x += Math.round((Math.random() * 6 - 3) * trackTemperature)
-				x = Math.max(0, Math.min(this.width - 1, x));
-			} else {
-				x = Math.floor(Math.random() * this.width);
+			if (y >= 2 && y <= this.height - 1) {
+				if (Math.random() > trackTemperature) {
+					x += Math.round((Math.random() * 6 - 3) * trackTemperature)
+					x = Math.max(0, Math.min(this.width - 1, x));
+				} else {
+					x = Math.floor(Math.random() * this.width);
+				}
 			}
 
 			if (y > 0 && x != previous_x) {
@@ -653,7 +673,7 @@ class Board {
 			cell.onTrack = true;
 		}
 
-		const fillProb = 0.3;
+		const fillProb = Math.random() * 0.4;
 
 		for (let x = 0; x < this.width; x++) {
 			for (let y = 0; y < this.height; y++) {
@@ -706,6 +726,8 @@ class Board {
 
 		this.game_over = false;
 		this.game_over_time = 0;
+
+		this.background_image = img("assets/board.svg");
 	}
 
 	spawn(ent) {
@@ -903,6 +925,8 @@ class Board {
 			entity.drawHealthbar();
 		}
 
+		drawImage(this.background_image, [0.5, 0.5], this.pos, 0);
+
 		for (const effect of this.effects) {
 			effect.draw();
 		}
@@ -1023,11 +1047,7 @@ class Smooth {
 
 class SmoothAngle extends Smooth {
 	tick(delta, target, acc, damp) {
-		function diffwrap(angle) {
-			const tau = Math.PI * 2;
-			return ((angle + Math.PI) % tau + tau) % tau - Math.PI;
-		}
-		this.value = target + diffwrap(this.value - target);
+		this.value = target + angleWrap(this.value - target);
 		super.tick(delta, target, acc, damp);
 	}
 }
@@ -1187,7 +1207,10 @@ class PaletteEntry {
 
 			if (this.dragBoardCell) {
 				const cell = this.dragBoard.cell(this.dragBoardCell);
-				if (!cell.buildable() || this.dragBoard.game_over) this.dragBoardCell = null;
+				if (!cell.buildable() || this.dragBoard.game_over
+					|| (this.dragBoardCell[1] < 1 || this.dragBoardCell[1] >= this.dragBoard.height - 1)) {
+					this.dragBoardCell = null;
+				}
 			}
 
 			if (this.dragBoardCell) {
@@ -1370,7 +1393,7 @@ class Game {
 		this.palette.update(delta);
 
 		const board_width = 6 * 64;
-		const board_height = 64 * 6;
+		const board_height = 8 * 64;
 
 		const board_spacing = board_width + 100;
 
