@@ -304,6 +304,12 @@ class Enemy extends BoardEntity {
 
 		const current_waypoint = this.board.enemyTrack[this.next_waypoint_index - 1]
 		const next_waypoint = this.board.enemyTrack[this.next_waypoint_index];
+		if (!next_waypoint) {
+			this.dead = true; // :'(
+
+			return;
+		}
+
 		const vec = [
 			next_waypoint[0] - current_waypoint[0],
 			next_waypoint[1] - current_waypoint[1],
@@ -311,12 +317,6 @@ class Enemy extends BoardEntity {
 
 		const len = Math.hypot(vec[0], vec[1]);
 		vec[0] /= len; vec[1] /= len;
-
-		if (!next_waypoint) {
-			this.dead = true; // :'(
-
-			return;
-		}
 
 		let movement_this_frame = this.speed * delta;
 		const next_dot = next_waypoint[0] * vec[0] + next_waypoint[1] * vec[1];
