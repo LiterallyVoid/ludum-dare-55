@@ -682,7 +682,7 @@ class Board {
 					time: spawn_time,
 				});
 
-				spawn_time += 0.3;
+				spawn_time += 0.5;
 			}
 
 			spawn_time += 3;
@@ -872,12 +872,12 @@ class Board {
 			ctx.lineTo(...this.cellToGlobal(pos));
 		}
 		ctx.strokeStyle = "#840";
-		ctx.lineWidth = 15;
+		ctx.lineWidth = 40;
 		ctx.lineJoin = "round";
 		ctx.stroke();
 
 		ctx.strokeStyle = "#010915";
-		ctx.lineWidth = 10;
+		ctx.lineWidth = 36;
 		ctx.stroke();
 
 		for (let x = 0; x < this.width; x++) {
