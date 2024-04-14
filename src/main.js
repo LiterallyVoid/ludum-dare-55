@@ -1604,6 +1604,12 @@ class Game {
 		this.board_slots.push(new Board(this, ["up", "in"], 0));
 
 		this.lost = false;
+		this.over_time = 0;
+	}
+
+	over() {
+		return true;
+		return this.lost || this.level_linear >= 50;
 	}
 
 	addScore(count) {
@@ -1790,6 +1796,10 @@ class Game {
 				continue;
 			}
 		}
+
+		if (this.over()) {
+			this.over_time += delta;
+		}
 	}
 
 	draw() {
@@ -1863,6 +1873,38 @@ class Game {
 
 		for (const effect of this.effects) {
 			effect.draw();
+		}
+
+		if (this.over()) {
+			const frac = Math.max(0, Math.min(1, this.over_time / 2));
+			const alpha = frac;
+
+			ctx.save();
+			ctx.globalAlpha = alpha;
+
+			ctx.fillStyle = "#0008";
+			ctx.fillRect(0, 0, width, height);
+
+			ctx.translate(width / 2, height / 2);
+
+			ctx.textAlign = "center";
+			ctx.textBaseline = "bottom";
+			ctx.fillStyle = "#FFF";
+
+			ctx.font = "Bold 20px sans";
+
+			if (this.level_linear == 50) {
+				ctx.font = "Bold 50px sans";
+
+				ctx.fillText("You won!", 0, 0);
+			} else {
+				ctx.font = "Bold 30px sans";
+				ctx.fillText(`You survived to level ${this.level_linear}, out of 50`, 0, 0);
+			}
+			ctx.font = "20px sans";
+			ctx.fillText(`...and cleared ${this.score} levels on the way.`, 0, 50);
+
+			ctx.restore();
 		}
 	}
 }
