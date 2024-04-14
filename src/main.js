@@ -304,13 +304,20 @@ class Enemy extends BoardEntity {
 	}
 }
 
-class EnemyBat extends Enemy {
+class EnemyNoop extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.4);
 
-		this.health = 2;
-		this.maxHealth = 2;
+		this.health = 1;
+		this.maxHealth = 1;
 
+		this.flavor_spawn = [
+			"ive been summoned by the WIZARD and i will DO NOTHING.",
+		];
+
+		this.flavor_die = [
+			"ow my insides",
+		];
 	}
 
 	update(delta) {
