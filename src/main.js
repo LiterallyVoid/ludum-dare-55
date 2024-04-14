@@ -96,13 +96,16 @@ class Turret extends BoardEntity {
 }
 
 class RepeaterBullet extends BoardEntity {
-	constructor(board, proto, controller, relativePos, velocity) {
+	constructor(board, proto, controller, relativePos, velocity, angle) {
 		super(board, relativePos, 0.05);
 		this.proto = proto;
 
 		this.controller = controller;
 
 		this.velocity = velocity;
+		this.angle = angle;
+
+		this.oob_timer = 0;
 	}
 
 	update(delta) {
@@ -113,11 +116,14 @@ class RepeaterBullet extends BoardEntity {
 
 		const cell = this.board.cell(this.relativePos);
 		if (!cell) {
+			this.oob_timer += delta;
+			if (this.oob_timer > 0.2) {
+				this.dead = true;
+				return;
+			}
+		} else if (!cell.backing.fliable) {
 			this.dead = true;
-			return;
 		}
-
-		if (!cell.backing.fliable) this.dead = true;
 
 		for (const entity of this.board.entitiesNear(this.relativePos, this.radius)) {
 			if (entity === this.controller) continue;
@@ -159,7 +165,7 @@ class RepeaterTurret extends Turret {
 				-Math.cos(angle) * 4.0,
 			];
 
-			this.board.spawn(new RepeaterBullet(this.board, {}, this, [...this.relativePos], bulletVelocity));
+			this.board.spawn(new RepeaterBullet(this.board, this.proto, this, [...this.relativePos], bulletVelocity, angle));
 
 			this.punch.velocity = -5.0;
 
