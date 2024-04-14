@@ -386,6 +386,9 @@ class ShockwaveTurret extends Turret {
 const global_sounds = {
 	enemy_hitsound: sound.load("sounds/enemy-hitsound.mp3"),
 	turret_hitsound: sound.load("sounds/turret-hitsound.mp3"),
+
+	jingle_arena_win: sound.load("sounds/jingle-arena-win.mp3"),
+	jingle_arena_lose: sound.load("sounds/jingle-arena-lose.mp3"),
 };
 
 const buildables = {
@@ -863,23 +866,8 @@ class Board {
 		}
 
 		if (this.enemies_to_spawn.length === 0 && !has_enemies && !this.game_over) {
+			this.onWon();
 			this.game_over = true;
-			this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
-
-			for (const entity of this.entities) {
-				if (entity instanceof Turret) {
-					this.effects.push(new BuildableReturnEffect(this, entity.relativePos));
-
-					this.game.palette.stock(entity.proto.key);
-
-					entity.dead = true;
-				}
-			}
-
-			this.game.addToken();
-
-			this.animation = ["up", "out"];
-			this.animation_time = -3;
 		}
 
 		if (this.game_over) {
@@ -888,8 +876,31 @@ class Board {
 
 	}
 
+	onWon() {
+		if (this.game_over) return;
+		global_sounds.jingle_arena_win.play(1, 0);
+		this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
+
+		for (const entity of this.entities) {
+			if (entity instanceof Turret) {
+				this.effects.push(new BuildableReturnEffect(this, entity.relativePos));
+
+				this.game.palette.stock(entity.proto.key);
+
+				entity.dead = true;
+			}
+		}
+
+		this.game.addToken();
+
+		this.animation = ["up", "out"];
+		this.animation_time = -3;
+	}
+
 	onLost() {
 		if (this.game_over) return;
+		global_sounds.jingle_arena_lose.play(1, 0);
+
 		this.game_over = true;
 		this.effects.push(new BannerEffect(this, "LOST"));
 

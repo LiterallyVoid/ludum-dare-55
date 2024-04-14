@@ -7,6 +7,8 @@ SOUND_SOURCES = \
 	sounds/turret-die.mmpz \
 	sounds/enemy-hitsound.mmpz \
 	sounds/turret-hitsound.mmpz \
+	sounds/jingle-arena-lose.mmpz \
+	sounds/jingle-arena-win.mmpz \
 
 SOUND_FILES = $(SOUND_SOURCES:%.mmpz=%.mp3)
 
