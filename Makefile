@@ -1,7 +1,13 @@
 MUSIC_SOURCES = music/prejam-dontuse.mmpz
 MUSIC_FILES = $(MUSIC_SOURCES:%.mmpz=%.mp3)
 
-SOUND_SOURCES = sounds/shockwave.mmpz sounds/repeater.mmpz
+SOUND_SOURCES = \
+	sounds/shockwave.mmpz \
+	sounds/repeater.mmpz \
+	sounds/turret-die.mmpz \
+	sounds/enemy-hitsound.mmpz \
+	sounds/turret-hitsound.mmpz \
+
 SOUND_FILES = $(SOUND_SOURCES:%.mmpz=%.mp3)
 
 LMMSFLAGS ?= -b 64 -l

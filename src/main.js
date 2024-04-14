@@ -56,6 +56,10 @@ class BoardEntity {
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
 
+	onDamage(amount) {
+		this.health -= amount;
+	}
+
 	drawHealthbar() {
 		if (!this.maxHealth) return;
 
@@ -205,9 +209,20 @@ class Turret extends BoardEntity {
 		this.team = 2;
 	}
 
+	onDamage(amount) {
+		super.onDamage(amount);
+
+		this.playSound(global_sounds.turret_hitsound, 1.0);
+	}
+
 	update(delta) {
 		super.update(delta);
 		this.refire -= delta;
+
+		if (this.health <= 0) {
+			this.playSound(this.proto.sound_die, 1.0);
+			this.dead = true;
+		}
 	}
 
 	draw() {
@@ -236,7 +251,7 @@ class Bullet extends BoardEntity {
 			if (entity === this || !this.canTarget(entity) || !entity.health) continue;
 
 			if (entity.health) {
-				entity.health -= this.damage;
+				entity.onDamage(this.damage);
 			}
 
 			this.dead = true;
@@ -324,6 +339,8 @@ class ShockwaveTurret extends Turret {
 
 		this.health = 4;
 		this.maxHealth = 4;
+
+		this.damage = 1.5;
 	}
 
 	update(delta) {
@@ -333,10 +350,10 @@ class ShockwaveTurret extends Turret {
 			this.refire += this.refire_time;
 			if (this.refire < 0) this.refire = 0;
 
-			for (const ent of this.board.entitiesNear(this.relativePos, 1.6)) {
-				if (ent === this) continue;
-				if (ent.health) {
-					ent.health -= 1.5;
+			for (const entity of this.board.entitiesNear(this.relativePos, 1.6)) {
+				if (entity === this) continue;
+				if (entity.health) {
+					entity.onDamage(this.damage);
 				}
 			}
 
@@ -366,6 +383,11 @@ class ShockwaveTurret extends Turret {
 	}
 }
 
+const global_sounds = {
+	enemy_hitsound: sound.load("sounds/enemy-hitsound.mp3"),
+	turret_hitsound: sound.load("sounds/turret-hitsound.mp3"),
+};
+
 const buildables = {
 	repeater: {
 		name: "Repeater Turret",
@@ -379,6 +401,7 @@ const buildables = {
 		rotatable: true,
 
 		sound: sound.load("sounds/repeater.mp3"),
+		sound_die: sound.load("sounds/turret-die.mp3"),
 	},
 	shockwave: {
 		name: "Shockwave Turret",
@@ -391,6 +414,8 @@ const buildables = {
 		rotatable: false,
 
 		sound: sound.load("sounds/shockwave.mp3"),
+		// hopefully browsers are good enough at caching this!
+		sound_die: sound.load("sounds/turret-die.mp3"),
 	},
 };
 
@@ -410,6 +435,12 @@ class Enemy extends BoardEntity {
 		this.team = 1;
 
 		this.angle_forwards = 0;
+	}
+
+	onDamage(amount) {
+		super.onDamage(amount);
+
+		this.playSound(global_sounds.enemy_hitsound, 1.0);
 	}
 
 	update(delta) {
