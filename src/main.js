@@ -341,12 +341,11 @@ class BannerEffect {
 	draw() {
 		ctx.save();
 		ctx.translate(...this.pos);
-
-		const size = 30;
+		ctx.scale(1 + this.time * 0.2, 1 + this.time * 0.2);
 
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.font = `Bold ${size}px sans`;
+		ctx.font = `Bold 30px sans`;
 		ctx.fillStyle = "#FFF";
 
 		ctx.fillText(this.text, 0, 0);
@@ -628,7 +627,8 @@ class Enemy extends BoardEntity {
 
 		this.angle_forwards = 0;
 
-		this.flavor_spawned = false;
+		this.spawn_flavor = false;
+		this.spawn_flavor_time = Math.random();
 	}
 
 	onDamage(amount) {
@@ -656,10 +656,13 @@ class Enemy extends BoardEntity {
 	update(delta) {
 		super.update(delta);
 		if (!this.spawn_flavor) {
-			this.spawn_flavor = true;
+			this.spawn_flavor_time -= delta;
+			if (this.spawn_flavor_time < 0) {
+				this.spawn_flavor = true;
 
-			if (Math.random() < 0.5) {
-				this.createFlavor(this.flavor_spawn);
+				if (Math.random() < 0.5) {
+					this.createFlavor(this.flavor_spawn);
+				}
 			}
 		}
 
@@ -835,6 +838,7 @@ class EnemyGunner extends Enemy {
 			"Take that!",
 			"I don’t miss.",
 			"Get wrecked!",
+			"Take that, you smoldering scrapheap!",
 		];
 
 		this.angle_smooth = new SmoothAngle(0);
