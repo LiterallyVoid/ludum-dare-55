@@ -1710,10 +1710,12 @@ function tick(time) {
 
 requestAnimationFrame(tick);
 
-canvas.addEventListener("mousemove", (e) => {
-	events.push(new EventMouseMove([e.offsetX, e.offsetY], [e.movementX, e.movementY]));
-	mouse_position[0] = e.offsetX;
-	mouse_position[1] = e.offsetY;
+window.addEventListener("mousemove", (e) => {
+	if (menu.visible) return;
+
+	events.push(new EventMouseMove([e.clientX, e.clientY], [e.clientX - mouse_position[0], e.clientY - mouse_position[1]]));
+	mouse_position[0] = e.clientX;
+	mouse_position[1] = e.clientY;
 });
 
 canvas.addEventListener("mousedown", (e) => {
