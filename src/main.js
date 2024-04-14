@@ -1159,18 +1159,42 @@ class Palette {
 	}
 }
 
-function update(delta) {
-	game.palette.pos = [width / 2, height];
-	game.palette.update(delta);
+class Game {
+	constructor() {
+		this.palette = new Palette();
+		this.board_slots = [
+			new Board(),
+		];
 
-	game.board.pos = [width / 2, height / 2];
-	game.board.update(delta);
+		// so this commit still runs.
+		this.board = this.board_slots[0];
+	}
+
+	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
+	update(delta) {
+		this.palette.pos = [width / 2, height];
+		this.palette.update(delta);
+
+		for (const board of this.board_slots) {
+			if (!board) continue;
+
+			board.pos = [width / 2, height / 2];
+			board.update(delta);
+		}
+	}
+
+	draw() {
+		for (const board of this.board_slots) {
+			if (!board) continue;
+
+			board.draw();
+		}
+
+		this.palette.draw();
+	}
 }
 
-const game = {
-	palette: new Palette(),
-	board: new Board(),
-};
+const game = new Game();
 
 function draw() {
 	const dpr = window.devicePixelRatio ?? 1;
@@ -1178,16 +1202,12 @@ function draw() {
 	width = canvas.width / dpr;
 	height = canvas.height / dpr;
 
-	canvas.onresize
-
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	ctx.save();
 	ctx.scale(dpr, dpr);
 
-	game.board.draw(width / 2, height / 2);
-	game.palette.draw();
-	
+	game.draw();
 	ctx.restore();
 
 }
@@ -1200,7 +1220,7 @@ function tick(time) {
 	event_capture_polled_this_frame = false;
 	const was_captured = event_capture != null;
 
-	update(menu.visible ? 0 : delta);
+	game.update(menu.visible ? 0 : delta);
 
 	draw();
 
