@@ -341,6 +341,11 @@ const buildables = {
 	},
 };
 
+// Make sure we can go back from built turret -> buildable later.
+for (const key in buildables) {
+	buildables[key].key = key;
+}
+
 class Enemy extends BoardEntity {
 	constructor(board, relativePos, radius) {
 		super(board, relativePos, radius);
@@ -554,8 +559,9 @@ class GridCell {
 }
 
 class Board {
-	constructor() {
+	constructor(game) {
 		this.pos = [0, 0];
+		this.game = game;
 
 		this.width = 6;
 		this.height = 6;
@@ -704,6 +710,16 @@ class Board {
 		if (this.enemies_to_spawn.length === 0 && !has_enemies && !this.game_over) {
 			this.game_over = true;
 			this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
+
+			for (const entity of this.entities) {
+				if (entity instanceof Turret) {
+					// this.spawn(new BuildableReturnEffect(entity.relativePos));
+
+					this.game.palette.stock(entity.proto.key);
+
+					entity.dead = true;
+				}
+			}
 		}
 	}
 
@@ -1214,14 +1230,27 @@ class Palette {
 			item.draw();
 		}
 	}
+
+	stock(buildable) {
+		for (const item of this.deck) {
+			if (item.item !== buildable) {
+				continue;
+			}
+
+			item.count++;
+			return;
+		}
+
+		console.assert(false, "stock() stocked an item not in palette");
+	}
 }
 
 class Game {
 	constructor() {
 		this.palette = new Palette();
 		this.board_slots = [
-			new Board(),
-			new Board(),
+			new Board(this),
+			new Board(this),
 		];
 		this.boards_pan = new Smooth(0);
 		this.panning = false;
