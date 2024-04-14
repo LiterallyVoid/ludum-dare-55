@@ -72,6 +72,7 @@ class BoardEntity {
 
 	onDamage(amount) {
 		this.health -= amount;
+		if (this.health <= 0) this.dead = true;
 	}
 
 	drawHealthbar() {
@@ -374,17 +375,16 @@ class Turret extends BoardEntity {
 		super.onDamage(amount);
 
 		this.playSound(global_sounds.turret_hitsound, 1.0);
+
+		if (this.dead) {
+			this.playSound(this.proto.sound_die, 1.0);
+			this.board.effects.push(new TurretLossEffect(this.board, [...this.relativePos]));
+		}
 	}
 
 	update(delta) {
 		super.update(delta);
 		this.refire -= delta;
-
-		if (this.health <= 0) {
-			this.playSound(this.proto.sound_die, 1.0);
-			this.board.effects.push(new TurretLossEffect(this.board, [...this.relativePos]));
-			this.dead = true;
-		}
 	}
 
 	draw() {
@@ -414,6 +414,7 @@ class Bullet extends BoardEntity {
 
 			if (entity.health) {
 				entity.onDamage(this.damage);
+				this.didDamage(entity);
 			}
 
 			this.dead = true;
@@ -747,11 +748,13 @@ class EnemyNoop extends Enemy {
 		this.flavor_spawn = [
 			"What is this place?",
 			"Who has summoned me where?",
+			"So where are we going again?",
 		];
 
 		this.flavor_die = [
 			"Ow.",
 			"I give my life for... whoever!",
+			"I am dead!",
 		];
 	}
 
@@ -772,10 +775,18 @@ class EnemyNoop extends Enemy {
 }
 
 class GunnerBullet extends Bullet {
-	constructor(board, relativePos, angle) {
+	constructor(board, relativePos, angle, controller) {
 		super(board, relativePos, angle, 8.0);
 
+		this.controller = controller;
+
 		this.damage = 0.15;
+	}
+
+	didDamage(ent) {
+		if (ent.dead && !this.controller.dead) {
+			this.controller.spawnFlavor(this.controller.flavor_destruction);
+		}
 	}
 
 	canTarget(ent) {
@@ -816,7 +827,14 @@ class EnemyGunner extends Enemy {
 		this.flavor_die = [
 			"Remember my name!",
 			"No...",
-			"My life for !",
+			"My life for Jane!",
+		];
+
+		this.flavor_destruction = [
+			"Sharp as always!",
+			"Take that!",
+			"I don’t miss.",
+			"Get wrecked!",
 		];
 
 		this.angle_smooth = new SmoothAngle(0);
@@ -841,7 +859,7 @@ class EnemyGunner extends Enemy {
 			if (this.refire < 0.0) {
 				this.refire = 1;
 
-				this.board.spawn(new GunnerBullet(this.board, [...this.relativePos], angle));
+				this.board.spawn(new GunnerBullet(this.board, [...this.relativePos], angle, this));
 			}
 		} else {
 			this.angle_smooth.tick(delta, this.angle_forwards, 100.0, 25.0);
