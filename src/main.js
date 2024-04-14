@@ -124,7 +124,8 @@ class Bullet extends BoardEntity {
 
 	update(delta) {
 		for (const entity of this.board.entitiesNear(this.relativePos, this.radius)) {
-			if (entity === this || !this.canTarget(entity)) continue;
+			// Entities without health (bullet) cannot collide
+			if (entity === this || !this.canTarget(entity) || !entity.health) continue;
 
 			if (entity.health) {
 				entity.health -= this.damage;
@@ -334,7 +335,7 @@ class Enemy extends BoardEntity {
 			next_waypoint[1] - current_waypoint[1],
 		];
 
-		this.angle_forwards = Math.atan2(vec[1], vec[0]);
+		this.angle_forwards = Math.atan2(vec[0], -vec[1]);
 
 		const len = Math.hypot(vec[0], vec[1]);
 		vec[0] /= len; vec[1] /= len;
@@ -410,9 +411,9 @@ class EnemyNoop extends Enemy {
 
 class GunnerBullet extends Bullet {
 	constructor(board, relativePos, angle) {
-		super(board, relativePos, angle, 3.0);
+		super(board, relativePos, angle, 8.0);
 
-		this.damage = 0.2;
+		this.damage = 0.05;
 	}
 
 	canTarget(ent) {
@@ -424,11 +425,14 @@ class GunnerBullet extends Bullet {
 	}
 
 	draw() {
-		ctx.beginPath();
-		ctx.arc(...this.pos, 6, 0, Math.PI * 2);
+		ctx.save();
+		ctx.translate(...this.pos);
+		ctx.rotate(this.angle);
 
-		ctx.fillStyle = "#F22";
-		ctx.fill();
+		ctx.fillStyle = "#FAA";
+		ctx.fillRect(-2, -8, 4, 16);
+
+		ctx.restore();
 	}
 }
 
@@ -463,14 +467,14 @@ class EnemyGunner extends Enemy {
 		this.refire -= delta;
 		if (target) {
 			const angle = Math.atan2(
-				target.relativePos[1] - this.relativePos[1],
 				target.relativePos[0] - this.relativePos[0],
+				-(target.relativePos[1] - this.relativePos[1]),
 			);
 			this.angle_smooth.tick(delta, angle, 100.0, 25.0);
 
 			// Enemies don't deserve proper delta handling.
 			if (this.refire < 0.0) {
-				this.refire = 0.2;
+				this.refire = 0.6;
 
 				this.board.spawn(new GunnerBullet(this.board, [...this.relativePos], angle));
 			}
@@ -485,10 +489,10 @@ class EnemyGunner extends Enemy {
 		ctx.rotate(this.angle_smooth);
 		ctx.beginPath();
 
-		ctx.moveTo(15, 0);
-		ctx.lineTo(-5, 8);
-		ctx.lineTo(-2, 0);
-		ctx.lineTo(-5, -8);
+		ctx.moveTo(0, -15);
+		ctx.lineTo(-8, 5);
+		ctx.lineTo(0, 2);
+		ctx.lineTo(8, 5);
 
 		ctx.closePath();
 		
