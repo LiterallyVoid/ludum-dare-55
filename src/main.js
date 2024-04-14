@@ -737,7 +737,7 @@ class PaletteEntry {
 				capture(this);
 				this.dragging = true;
 
-				this.dragPos.set(this.pos);
+				this.dragPos.set([this.pos[0], this.pos[1] - 60]);
 				this.dragAngle.set(0);
 
 				this.rotation = 0;
@@ -846,8 +846,10 @@ class PaletteEntry {
 
 		ctx.fillText(this.count - (this.dragging ? 1 : 0), x, y - 80);
 
-		drawImage(buildable.image, [0.5, 0.5], [x, y - 40], 0);
-		drawImage(buildable.image_barrel, [0.5, 0.5], [x, y - 40], 0);
+		if (!this.dragging) {
+			drawImage(buildable.image, [0.5, 0.5], [x, y - 40], 0);
+			drawImage(buildable.image_barrel, [0.5, 0.5], [x, y - 40], 0);
+		}
 		// drawImage(buildable.hurtbox, buildable.hurtboxAnchor, [x, y - 40], 0);
 
 		ctx.globalAlpha = 1.0;
