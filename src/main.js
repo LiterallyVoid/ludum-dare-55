@@ -1319,6 +1319,8 @@ class Game {
 
 		this.token_image = img("assets/token-held.svg");
 		this.token_image_outline = img("assets/token-outline.svg");
+
+		this.score = 0;
 	}
 
 	addToken() {
@@ -1429,7 +1431,7 @@ class Game {
 		}
 
 		for (const timer of this.token_timers) {
-			timer.time += delta * 2;
+			timer.time += delta * 3;
 			timer.time = Math.min(1, timer.time);
 		}
 	}
@@ -1446,13 +1448,6 @@ class Game {
 		ctx.save();
 		ctx.translate(width, 0);
 
-		ctx.textAlign = "right";
-		ctx.textBaseline = "top";
-
-		ctx.font = "20px sans";
-		ctx.fillStyle = "#FFF";
-		ctx.fillText(`${this.tokens}/${this.max_tokens}`, -5, 5);
-
 		for (let i = 0; i < this.max_tokens; i++) {
 			const timer = this.token_timers[i];
 
@@ -1463,9 +1458,16 @@ class Game {
 
 			if (timer.time < 1) {
 				if (timer.sign < 0) {
-					ctx.globalAlpha = 1.0 - Math.pow(timer.time, 2);
-					let s = (1.0 - (Math.pow(timer.time, 2)));
+					let s = 1.0 + (1.0 - Math.pow(1.0 - timer.time, 3)) * 0.2;
 					ctx.scale(s, s);
+
+					ctx.strokeStyle = "#F22";
+					ctx.lineWidth = Math.pow(1.0 - timer.time, 2) * 20;
+					const arc_size = 20 + (1.0 - Math.pow(1.0 - timer.time, 3.0)) * 20;
+					ctx.beginPath();
+					ctx.arc(0, 0, arc_size, 0, Math.PI * 2);
+					ctx.stroke();
+					ctx.globalAlpha = (1.0 - Math.pow(timer.time, 4)) * 0.8;
 				}
 
 				if (timer.sign > 0) {
@@ -1473,7 +1475,7 @@ class Game {
 					s *= (1.0 - Math.pow(timer.time, 6)) * 0.4 + 1.0;
 					ctx.scale(s, s);
 
-					const wipe = 30 * ((1.0 - Math.pow(1.0 - timer.time, 5.0)) * 2 - 1);
+					const wipe = 30 * ((1.0 - Math.pow(1.0 - timer.time, 3.0)) * 2 - 1);
 
 					ctx.beginPath();
 					ctx.moveTo(-80 + wipe, 80 + wipe);
@@ -1493,6 +1495,13 @@ class Game {
 
 			ctx.translate(-70, 0);
 		}
+
+		ctx.textAlign = "right";
+		ctx.textBaseline = "middle";
+
+		ctx.font = "Bold 30px sans";
+		ctx.fillStyle = "#FFF";
+		ctx.fillText(`${this.score.toLocaleString()}`, -25, 40);
 
 		ctx.restore();
 
