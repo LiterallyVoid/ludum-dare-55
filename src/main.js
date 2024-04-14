@@ -158,6 +158,77 @@ class ShockEffect extends BoardEntity {
 	}
 }
 
+class TurretLossEffect extends BoardEntity {
+	constructor(board, relativePos) {
+		super(board, relativePos, 0);
+
+		this.time = 0;
+
+		this.sparkParticles = [
+		];
+
+		for (let i = 0; i < 8; i++) {
+			this.sparkParticles.push({
+				pos: [...this.relativePos, 0],
+				vel: [
+					(Math.random() * 2 - 1) * 3,
+					(Math.random() * 2 - 1) * 3,
+					Math.random() * 4,
+				],
+			});
+		}
+
+		this.time = 0;
+	}
+
+	update(delta) {
+		for (const part of this.sparkParticles) {
+			part.pos[0] += part.vel[0] * delta;
+			part.pos[1] += part.vel[1] * delta;
+			part.pos[2] += part.vel[2] * delta;
+
+			part.vel[2] -= delta * 8;
+			if (part.pos[2] < 0) {
+				part.vel[2] = Math.abs(part.vel[2]);
+				part.pos[2] = 0;
+
+				part.vel[0] *= 0.8;
+				part.vel[1] *= 0.8;
+			}
+		}
+		super.update(delta);
+
+		this.time += delta * 2;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		const frac = this.time;
+		ctx.strokeStyle = "#FE8";
+		ctx.lineWidth = 4 * (1 - frac);
+		ctx.lineCap = "round";
+		for (const spark of this.sparkParticles) {
+			let [x, y] = this.board.cellToGlobal(spark.pos);
+			y -= spark.pos[2] * 64;
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+
+			const len = 8 * (1 - frac);
+			ctx.lineTo(x + (spark.vel[0]) * len, y + (spark.vel[1] - spark.vel[2]) * len);
+
+			ctx.stroke();
+		}
+
+		ctx.beginPath();
+		ctx.arc(this.pos[0], this.pos[1], (1 - Math.pow(1 - frac, 2)) * 150, 0, Math.PI * 2);
+
+		ctx.fillStyle = "#F80";
+		ctx.globalAlpha = 1 - frac;
+		ctx.fill();
+		ctx.globalAlpha = 1;
+	}
+}
+
 class BuildableReturnEffect {
 	constructor(board, pos, angle, name, time, paletteEntry) {
 		this.board = board;
@@ -311,6 +382,7 @@ class Turret extends BoardEntity {
 
 		if (this.health <= 0) {
 			this.playSound(this.proto.sound_die, 1.0);
+			this.board.effects.push(new TurretLossEffect(this.board, [...this.relativePos]));
 			this.dead = true;
 		}
 	}
@@ -517,6 +589,32 @@ for (const key in buildables) {
 	buildables[key].key = key;
 }
 
+class FlavorEffect extends BoardEntity {
+	constructor(board, relativePos, text) {
+		super(board, relativePos, 0);
+		this.text = text;
+
+		this.time = 0;
+	}
+
+	update(delta) {
+		super.update(delta);
+		this.time += delta / 3;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		ctx.save();
+		ctx.font = "9px sans";
+		ctx.fillStyle = "#FFF";
+		ctx.globalAlpha = 1 - this.time;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(this.text, this.pos[0], this.pos[1] - 5);
+		ctx.restore();
+	}
+}
+
 class Enemy extends BoardEntity {
 	constructor(board, relativePos, radius) {
 		super(board, relativePos, radius);
@@ -528,16 +626,41 @@ class Enemy extends BoardEntity {
 		this.team = 1;
 
 		this.angle_forwards = 0;
+
+		this.flavor_spawned = false;
 	}
 
 	onDamage(amount) {
 		super.onDamage(amount);
 
 		this.playSound(global_sounds.enemy_hitsound, 1.0);
+
+		if (this.health <= 0) {
+			this.dead = true;
+			if (Math.random() < 0.3) this.createFlavor(this.flavor_die);
+		}
+	}
+
+	/**
+		@param {string | string[]} text
+	*/
+	createFlavor(text) {
+		if (text instanceof Array) {
+			text = text[Math.floor(Math.random() * text.length)];
+		}
+
+		this.board.effects.push(new FlavorEffect(this.board, [...this.relativePos], text));
 	}
 
 	update(delta) {
 		super.update(delta);
+		if (!this.spawn_flavor) {
+			this.spawn_flavor = true;
+
+			if (Math.random() < 0.5) {
+				this.createFlavor(this.flavor_spawn);
+			}
+		}
 
 		const current_waypoint = this.board.enemyTrack[this.next_waypoint_index - 1]
 		const next_waypoint = this.board.enemyTrack[this.next_waypoint_index];
@@ -622,11 +745,13 @@ class EnemyNoop extends Enemy {
 		this.maxHealth = 3;
 
 		this.flavor_spawn = [
-			"ive been summoned by the WIZARD and i will DO NOTHING.",
+			"What is this place?",
+			"Who has summoned me where?",
 		];
 
 		this.flavor_die = [
-			"ow my insides",
+			"Ow.",
+			"I give my life for... whoever!",
 		];
 	}
 
@@ -683,11 +808,15 @@ class EnemyGunner extends Enemy {
 
 		this.flavor_spawn = [
 			"I’ve got more bullets than I can count, and that’s not saying much because I can’t count!",
+			"The great witch Jane has summoned me for my skill and not my literacy!",
+			"Bring it on!",
+			"ONE OF US IS GOING TO REGRET THIS!",
 		];
 
 		this.flavor_die = [
 			"Remember my name!",
 			"No...",
+			"My life for !",
 		];
 
 		this.angle_smooth = new SmoothAngle(0);
