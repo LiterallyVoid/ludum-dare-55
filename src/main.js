@@ -1326,10 +1326,17 @@ class Game {
 
 		let i = 0;
 		for (const board of this.board_slots) {
-			if (!board) continue;
+			if (!board) {
+				i++;
+				continue;
+			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
 			board.update(delta);
+
+			if (board.game_over_time > 1) {
+				this.board_slots[i] = null;
+			}
 
 			i++;
 		}
