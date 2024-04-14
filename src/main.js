@@ -1686,7 +1686,7 @@ class Game {
 				this.level += 1 / this.desired_slots();
 
 				// FINAL MAXIMUM SCORE
-				if (this.level >= 15) {
+				if (this.level >= 16.7) {
 					this.board_slots[i] = null;
 					continue;
 				}
@@ -1719,14 +1719,13 @@ class Game {
 				this.hover = false;
 			}
 
-			// @TODO remove before jam end!!!!!! (very important)
-			if (event instanceof EventKeyDown) {
-				if (event.key === "F2") this.addToken();
-				if (event.key === "F3") this.removeToken();
-				if (event.key === "F4") this.addScore(50823);
-				if (event.key === "F5") this.board_slots[0].onLost();
-				if (event.key === "F6") this.level++;
-			}
+			// if (event instanceof EventKeyDown) {
+			// 	if (event.key === "F2") this.addToken();
+			// 	if (event.key === "F3") this.removeToken();
+			// 	if (event.key === "F4") this.addScore(50823);
+			// 	if (event.key === "F5") this.board_slots[0].onLost();
+			// 	if (event.key === "F6") this.level++;
+			// }
 
 			if (event instanceof EventMouseMove) {
 				if (this.panning) {
@@ -1919,7 +1918,8 @@ window.addEventListener("keydown", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventKeyDown(e.key));
-	if (!e.altKey && !e.ctrlKey && !e.metaKey) e.preventDefault();
+	// Hack: ignore function keys
+	if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.key.startsWith("F")) e.preventDefault();
 });
 
 window.addEventListener("mousewheel", (e) => {

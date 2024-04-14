@@ -34,7 +34,7 @@ effects_volume_slider.addEventListener("input", function() {
 });
 
 window.onblur = () => {
-	setVisible(true);
+	// setVisible(true);
 };
 
 window.addEventListener("keydown", (e) => {
