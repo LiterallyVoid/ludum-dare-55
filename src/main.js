@@ -1325,8 +1325,8 @@ class Game {
 
 		this.hover = false;
 
-		this.tokens = 4;
-		this.max_tokens = 4;
+		this.tokens = 5;
+		this.max_tokens = 5;
 
 		this.token_timers = [];
 		for (let i = 0; i < this.max_tokens; i++) {
