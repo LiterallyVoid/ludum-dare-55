@@ -840,12 +840,12 @@ class Board { constructor(game, animation, animation_time) {
 
 		let spawn_time = 3 - animation_time;
 
-		const waves = Math.random() * (2 + this.game.level * 0.1) + 3;
+		const waves = Math.random() * (2 + this.game.level * 0.05) + 3;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
 		for (let i = 0; i < waves; i++) {
-			const count = Math.random() * (1 + this.game.level * 0.2) + 1;
+			const count = Math.random() * (1 + this.game.level * 0.1) + 1;
 			const cls = enemies[Math.floor(Math.random() * enemies.length)];
 			for (let i = 0; i < count; i++) {
 				this.enemies_to_spawn.push({
@@ -1596,6 +1596,7 @@ class Game {
 		this.effects = [];
 
 		this.level = 0;
+		this.level_linear = 1;
 
 		this.board_slots.push(new Board(this, ["up", "in"], 0));
 
@@ -1683,9 +1684,10 @@ class Game {
 
 			if (board.game_over_time > 1) {
 				this.level += 1 / this.desired_slots();
+				this.level_linear++;
 
 				// FINAL MAXIMUM SCORE
-				if (this.level >= 16.7) {
+				if (this.level >= 16.4) {
 					this.board_slots[i] = null;
 					continue;
 				}
@@ -1843,7 +1845,7 @@ class Game {
 
 		ctx.font = "Bold 30px sans";
 		ctx.fillStyle = "#FFF";
-		ctx.fillText(`${this.score.toLocaleString()} level${this.score == 1 ? "" : "s"} cleared`, -50, 40);
+		ctx.fillText(`Level ${this.level_linear.toLocaleString()}/50`, -50, 40);
 
 		ctx.restore();
 

@@ -54,3 +54,12 @@ canvas {
 	justify-content: space-between;
 	flex-wrap: wrap;
 }
+
+.menu > h2 {
+	margin-bottom: 0;
+}
+
+.menu > p {
+	margin-top: 0;
+}
+
