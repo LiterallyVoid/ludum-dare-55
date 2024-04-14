@@ -1032,10 +1032,6 @@ class Board {
 	}
 
 	spawn(ent) {
-		if (ent instanceof Turret) {
-			this.has_turrets = true;
-		}
-
 		this.entities.push(ent);
 
 		if (ent.onGrid) {
@@ -1082,12 +1078,18 @@ class Board {
 
 		this.enemy_spawn_timer += delta;
 
+		this.has_turrets = false;
+
 		let has_enemies = false;
 		for (let i = 0; i < this.entities.length; i++) {
 			const ent = this.entities[i];
 
 			if (ent instanceof Enemy) {
 				has_enemies = true;
+			}
+
+			if (ent instanceof Turret) {
+				this.has_turrets = true;
 			}
 
 			ent.update(delta);
