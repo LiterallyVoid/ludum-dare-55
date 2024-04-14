@@ -859,19 +859,6 @@ class Board {
 
 			spawn_time += 3;
 		}
-		// for (let i = 0; i < 6; i++) {
-		// 	this.enemies_to_spawn.push({
-		// 		ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
-		// 		time: i * 1,
-		// 	});
-		// }
-
-		// for (let i = 0; i < 10; i++) {
-		// 	this.enemies_to_spawn.push({
-		// 		ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
-		// 		time: i * 0.5 + 8,
-		// 	});
-		// }
 
 		// Reversed, we're going to spawn enemies going from the *end* to avoid needless copying (when popping from the front.)
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
@@ -999,9 +986,9 @@ class Board {
 			time -= 0.2;
 		}
 
-		this.game.onLevelCompleted();
 		this.game.addToken();
 		this.game.addScore(1);
+		this.game.onLevelCompleted();
 
 		this.animation = ["up", "out"];
 		this.animation_time = -3;
@@ -1016,8 +1003,8 @@ class Board {
 
 		this.effects.push(new BannerEffect(this, "LOST"));
 
-		this.game.onLevelCompleted();
 		this.game.removeToken();
+		this.game.onLevelCompleted();
 
 		this.animation = ["down", "out"];
 		this.animation_time = -3;
@@ -1608,16 +1595,30 @@ class Game {
 	}
 
 	over() {
-		return this.lost || this.level_linear >= 50;
+		return this.lost || this.level_linear > 50;
 	}
 
 	addScore(count) {
-		if (this.tokens <= 0) return;
+		if (this.over()) return;
 		this.score += count;
 	}
 
 	onLevelCompleted() {
-		if (this.lost) return;
+		this.lost = true;
+
+		if (this.tokens > 0) {
+			for (const item of this.palette.deck) {
+				if (item.count > 0) this.lost = false;
+			}
+
+			for (const board of this.board_slots) {
+				if (!board) continue;
+				if (board.has_turrets && !board.game_over_lost) this.lost = false;
+			}
+		}
+
+		if (this.over()) return;
+		this.level += 1 / this.desired_slots();
 		this.level_linear++;
 	}
 
@@ -1650,7 +1651,7 @@ class Game {
 		if (this.level >= 6) {
 			count++;
 		}
-		if (this.level >= 12) {
+		if (this.level >= 15) {
 			count++;
 		}
 
@@ -1659,19 +1660,6 @@ class Game {
 
 	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
 	update(delta) {
-		this.lost = true;
-
-		if (this.tokens > 0) {
-			for (const item of this.palette.deck) {
-				if (item.count > 0) this.lost = false;
-			}
-
-			for (const board of this.board_slots) {
-				if (!board) continue;
-				if (board.has_turrets && !board.game_over_lost) this.lost = false;
-			}
-		}
-
 		if (this.lost) {
 			for (const board of this.board_slots) {
 				if (!board) continue;
@@ -1707,10 +1695,9 @@ class Game {
 			board.update(delta);
 
 			if (board.game_over_time > 1) {
-				this.level += 1 / this.desired_slots();
 
 				// FINAL MAXIMUM SCORE
-				if (this.level >= 16.4) {
+				if (this.level_linear > 50) {
 					this.board_slots[i] = null;
 					continue;
 				}
@@ -1729,6 +1716,8 @@ class Game {
 			this.board_slots.push(new Board(this, ["up", "in"], 0));
 			this.effects.push(new BoardPopupEffect());
 		}
+
+		menu.setLost(this.over());
 
 		poll(this, (event) => {
 			if (this.over()) {
@@ -1872,7 +1861,10 @@ class Game {
 
 		ctx.font = "Bold 30px sans";
 		ctx.fillStyle = "#FFF";
-		ctx.fillText(`Level ${this.level_linear.toLocaleString()}/50`, -50, 40);
+
+		if (this.level_linear <= 50) {
+			ctx.fillText(`Level ${this.level_linear.toLocaleString()}/50`, -50, 40);
+		}
 
 		ctx.restore();
 
@@ -1898,13 +1890,16 @@ class Game {
 
 			ctx.font = "Bold 20px sans";
 
-			if (this.level_linear == 50) {
+			if (this.level_linear > 50) {
 				ctx.font = "Bold 50px sans";
 
 				ctx.fillText("You won!", 0, 0);
+			} else if (this.level_linear > 1) {
+				ctx.font = "Bold 30px sans";
+				ctx.fillText(`You survived to level ${this.level_linear - 1}, out of 50`, 0, 0);
 			} else {
 				ctx.font = "Bold 30px sans";
-				ctx.fillText(`You survived to level ${this.level_linear}, out of 50`, 0, 0);
+				ctx.fillText("You suffered crushing defeat", 0, 0);
 			}
 			ctx.font = "20px sans";
 			ctx.fillText(`...and cleared ${this.score} levels on the way.`, 0, 40);
@@ -1917,7 +1912,11 @@ class Game {
 	}
 }
 
-const game = new Game();
+let game = new Game();
+
+menu.setRestartCallback(() => {
+	game = new Game();
+});
 
 function draw() {
 	const dpr = window.devicePixelRatio ?? 1;

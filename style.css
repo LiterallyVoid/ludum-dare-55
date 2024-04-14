@@ -63,3 +63,34 @@ canvas {
 	margin-top: 0;
 }
 
+.menu > button {
+	align-self: stretch;
+	padding: 5px;
+
+	border-radius: 3px;
+	border: none;
+
+	margin-bottom: 8px;
+
+	cursor: pointer;
+
+	font-weight: bold;
+
+	font-size: 120%;
+}
+
+.menu > button.best {
+	background-color: #FFF;
+	color: #000;
+	font-size: 150%;
+}
+
+.menu > button.good {
+	background-color: #FFF;
+	color: #000;
+}
+
+.menu > button.bad {
+	background-color: #F24;
+	color: #FFF;
+}
