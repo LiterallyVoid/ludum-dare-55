@@ -296,11 +296,42 @@ class Enemy extends BoardEntity {
 
 		this.speed = 1;
 
-		this.waypoint_index = 0;
+		this.next_waypoint_index = 1;
 	}
 
 	update(delta) {
 		super.update(delta);
+
+		const current_waypoint = this.board.enemyTrack[this.next_waypoint_index - 1]
+		const next_waypoint = this.board.enemyTrack[this.next_waypoint_index];
+		const vec = [
+			next_waypoint[0] - current_waypoint[0],
+			next_waypoint[1] - current_waypoint[1],
+		];
+
+		const len = Math.hypot(vec[0], vec[1]);
+		vec[0] /= len; vec[1] /= len;
+
+		if (!next_waypoint) {
+			this.dead = true; // :'(
+
+			return;
+		}
+
+		let movement_this_frame = this.speed * delta;
+		const next_dot = next_waypoint[0] * vec[0] + next_waypoint[1] * vec[1];
+
+		const here_dot = this.relativePos[0] * vec[0] + this.relativePos[1] * vec[1];
+
+		const pending = next_dot - here_dot;
+
+		if (movement_this_frame > pending) {
+			movement_this_frame = pending;
+			this.next_waypoint_index++;
+		}
+
+		this.relativePos[0] += vec[0] * movement_this_frame;
+		this.relativePos[1] += vec[1] * movement_this_frame;
 	}
 }
 
