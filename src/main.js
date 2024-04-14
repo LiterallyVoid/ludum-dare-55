@@ -1689,7 +1689,6 @@ class Game {
 		for (let i = 0; i < this.board_slots.length; i++) {
 			const board = this.board_slots[i];
 			if (!board) {
-				i++;
 				continue;
 			}
 
