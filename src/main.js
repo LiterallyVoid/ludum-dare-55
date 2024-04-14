@@ -1760,9 +1760,8 @@ class Game {
 		this.score += count;
 	}
 
-	onLevelCompleted() {
+	checkLost() {
 		this.lost = true;
-
 		if (this.tokens > 0) {
 			for (const item of this.palette.deck) {
 				if (item.count > 0) this.lost = false;
@@ -1774,6 +1773,10 @@ class Game {
 			}
 		}
 
+	}
+
+	onLevelCompleted() {
+		this.checkLost();
 		if (this.over()) return;
 		this.level += 1 / this.desired_slots();
 		this.level_linear++;
@@ -1817,6 +1820,7 @@ class Game {
 
 	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
 	update(delta) {
+		this.checkLost();
 		if (this.lost) {
 			for (const board of this.board_slots) {
 				if (!board) continue;
