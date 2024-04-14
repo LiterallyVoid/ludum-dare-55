@@ -1488,7 +1488,6 @@ class PaletteEntry {
 	}
 
 	update(delta) {
-
 		this.count_pop = Math.max(0, this.count_pop - delta * 2);
 
 		if (this.dragging && !captured(this)) {
@@ -1864,6 +1863,7 @@ class Game {
 				}
 
 				if (this.lost) {
+					this.board_slots[i] = null;
 					continue;
 				}
 
