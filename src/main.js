@@ -244,6 +244,9 @@ class ShockwaveTurret extends Turret {
 		super(board, proto, relativePos, rotation);
 
 		this.refire = 2.0;
+
+		this.health = 4;
+		this.maxHealth = 4;
 	}
 
 	update(delta) {
