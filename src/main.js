@@ -414,7 +414,7 @@ class Bullet extends BoardEntity {
 
 			if (entity.health) {
 				entity.onDamage(this.damage);
-				this.didDamage(entity);
+				this.didDamage?.(entity);
 			}
 
 			this.dead = true;
