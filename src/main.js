@@ -1167,7 +1167,7 @@ class PaletteEntry {
 
 			if (this.dragBoardCell) {
 				const cell = this.dragBoard.cell(this.dragBoardCell);
-				if (!cell.buildable()) this.dragBoardCell = null;
+				if (!cell.buildable() || this.dragBoard.game_over) this.dragBoardCell = null;
 			}
 
 			if (this.dragBoardCell) {
