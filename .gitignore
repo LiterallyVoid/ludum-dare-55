@@ -3,4 +3,7 @@
 # Generated from MMPZ files by LMMS; I may commit these later.
 music/*.mp3
 
+# Also generated from MMPZ files
+sounds/*.mp3
+
 dist/
