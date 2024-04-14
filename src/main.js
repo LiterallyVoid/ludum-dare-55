@@ -107,25 +107,35 @@ class Turret extends BoardEntity {
 	}
 }
 
-class RepeaterBullet extends BoardEntity {
-	constructor(board, proto, controller, relativePos, velocity, angle) {
+class Bullet extends BoardEntity {
+	constructor(board, relativePos, angle, speed) {
 		super(board, relativePos, 0.05);
-		this.proto = proto;
 
-		this.controller = controller;
-
-		this.velocity = velocity;
+		this.velocity = [
+			Math.sin(angle) * speed,
+			-Math.cos(angle) * speed,
+		];
 		this.angle = angle;
 
 		this.oob_timer = 0;
+
+		this.damage = 1;
 	}
 
 	update(delta) {
-		super.update(delta);
+		for (const entity of this.board.entitiesNear(this.relativePos, this.radius)) {
+			if (entity === this || !this.canTarget(entity)) continue;
+
+			if (entity.health) {
+				entity.health -= this.damage;
+			}
+
+			this.dead = true;
+		}
+		
 
 		this.relativePos[0] += this.velocity[0] * delta;
 		this.relativePos[1] += this.velocity[1] * delta;
-
 		const cell = this.board.cell(this.relativePos);
 		if (!cell) {
 			this.oob_timer += delta;
@@ -137,17 +147,25 @@ class RepeaterBullet extends BoardEntity {
 			this.dead = true;
 		}
 
-		for (const entity of this.board.entitiesNear(this.relativePos, this.radius)) {
-			if (entity === this.controller) continue;
-			if (entity === this) continue;
+		super.update(delta);
+	}
+}
 
-			if (entity.health) {
-				entity.health--;
-			}
+class RepeaterBullet extends Bullet {
+	constructor(board, proto, controller, relativePos, angle) {
+		super(board, relativePos, angle, 4.0);
 
-			this.dead = true;
-		}
-		
+		this.proto = proto;
+		this.controller = controller;
+	}
+
+	canTarget(ent) {
+		return ent !== this.controller;
+	}
+
+	update(delta) {
+		super.update(delta);
+
 		this.pos = this.board.cellToGlobal(this.relativePos);
 	}
 
@@ -171,12 +189,7 @@ class RepeaterTurret extends Turret {
 
 			const angle = this.rotation * Math.PI * 0.5;
 
-			const bulletVelocity = [
-				Math.sin(angle) * 4.0,
-				-Math.cos(angle) * 4.0,
-			];
-
-			this.board.spawn(new RepeaterBullet(this.board, this.proto, this, [...this.relativePos], bulletVelocity, angle));
+			this.board.spawn(new RepeaterBullet(this.board, this.proto, this, [...this.relativePos], angle));
 
 			this.punch.velocity = -5.0;
 
