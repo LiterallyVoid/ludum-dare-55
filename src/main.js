@@ -555,15 +555,15 @@ class Board {
 
 		for (let i = 0; i < 6; i++) {
 			this.enemies_to_spawn.push({
-				ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
-				time: i * 0.5,
+				ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
+				time: i * 1,
 			});
 		}
 
 		for (let i = 0; i < 10; i++) {
 			this.enemies_to_spawn.push({
-				ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
-				time: i * 0.3 + 5,
+				ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
+				time: i * 0.5 + 8,
 			});
 		}
 
