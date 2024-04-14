@@ -11,10 +11,13 @@ export function setVisible(visible_) {
 	menu_container.style.display = visible ? "flex" : "none";
 }
 
-document.querySelector("#menu__sound-enabled")
+const music_checkbox = document.querySelector("#menu__sound-enabled");
+music_checkbox
 	.addEventListener("input", function() {
-	sound.setEnabled(this.checked);
-});
+		sound.setEnabled(this.checked);
+	});
+
+sound.setEnabled(music_checkbox.checked);
 
 const music_volume_slider = document.querySelector("#menu__music-volume");
 const effects_volume_slider = document.querySelector("#menu__effects-volume");
@@ -31,7 +34,6 @@ effects_volume_slider.addEventListener("input", function() {
 });
 
 window.onblur = () => {
-	// @TODO MAKE SURE THIS IS CHANGED FOR RELEASE
 	setVisible(true);
 };
 

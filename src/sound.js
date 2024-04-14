@@ -13,6 +13,11 @@ class PlayingMusic {
 		this.path = path;
 		this.element = new Audio(path);
 		this.element.loop = true;
+		this.element.autoplay = true;
+
+		this.element.addEventListener("load", () => {
+			this.start();
+		});
 
 		this.source = context.createMediaElementSource(this.element);
 		this.gain = context.createGain();
