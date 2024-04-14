@@ -765,14 +765,14 @@ class Board {
 			entity.draw();
 		}
 
+		// Everything else is outside of our clip.
+		ctx.restore();
+
 		// Draw healthbars on a separate layer.
 		for (const entity of this.entities) {
 			entity.drawHealthbar();
 		}
 
-		ctx.restore();
-
-		// Outside of clip.
 		for (const effect of this.effects) {
 			effect.draw();
 		}
