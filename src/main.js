@@ -753,7 +753,8 @@ class GridCell {
 	}
 }
 
-class Board { constructor(game, animation, animation_time) {
+class Board {
+	constructor(game, animation, animation_time) {
 		this.pos = [0, 0];
 		this.game = game;
 
@@ -926,7 +927,7 @@ class Board { constructor(game, animation, animation_time) {
 
 			this.animation_time += delta;
 		} else {
-			this.fade = 1;
+			this.fade = this.animation[1] === "out" ? 0 : 1;
 		}
 
 		// Important to do this first, as otherwise if there's a single enemy, there's a one frame gap between it spawning -> it registering on the `has_enemies` scale.
@@ -1648,13 +1649,23 @@ class Game {
 	update(delta) {
 		this.lost = true;
 
-		for (const item of this.palette.deck) {
-			if (item.count > 0) this.lost = false;
+		if (this.tokens > 0) {
+			for (const item of this.palette.deck) {
+				if (item.count > 0) this.lost = false;
+			}
+
+			for (const board of this.board_slots) {
+				if (!board) continue;
+				if (board.has_turrets) this.lost = false;
+			}
 		}
 
-		for (const board of this.board_slots) {
-			if (!board) continue;
-			if (board.has_turrets) this.lost = false;
+		if (this.lost) {
+			for (const board of this.board_slots) {
+				if (!board) continue;
+				if (board.animation_time < 2.0) continue;
+				board.onLost();
+			}
 		}
 		
 		this.palette.pos = [width / 2, height];
@@ -1675,12 +1686,15 @@ class Game {
 			}
 		}
 
-		let i = 0;
-		for (let board of this.board_slots) {
+		for (let i = 0; i < this.board_slots.length; i++) {
+			const board = this.board_slots[i];
 			if (!board) {
 				i++;
 				continue;
 			}
+
+			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
+			board.update(delta);
 
 			if (board.game_over_time > 1) {
 				this.level += 1 / this.desired_slots();
@@ -1701,10 +1715,6 @@ class Game {
 				board = this.board_slots[i];
 			}
 
-			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
-			board.update(delta);
-
-			i++;
 		}
 		
 		let desired_slots = this.desired_slots();
