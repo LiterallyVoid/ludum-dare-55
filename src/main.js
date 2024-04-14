@@ -397,8 +397,7 @@ class Board {
 			}
 
 			if (y == 0) {
-				// The first track item is on the edge of the grid: 0.5 units above the first proper grid cell.
-				this.enemyTrack.push([x, y - 0.5]);
+				this.enemyTrack.push([x, y - 1]);
 			}
 			this.enemyTrack.push([x, y]);
 
