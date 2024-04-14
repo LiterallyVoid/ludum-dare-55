@@ -172,19 +172,25 @@ class BannerEffect {
 		this.text = text;
 
 		this.pos = [0, 0];
+
+		this.time = 0;
 	}
 
 	update(delta) {
 		this.pos = this.board.pos;
+
+		this.time += delta / 4;
 	}
 
 	draw() {
 		ctx.save();
 		ctx.translate(...this.pos);
 
+		const size = 30;
+
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.font = "Bold 30px sans";
+		ctx.font = `Bold ${size}px sans`;
 		ctx.fillStyle = "#FFF";
 
 		ctx.fillText(this.text, 0, 0);
