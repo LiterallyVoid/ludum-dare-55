@@ -142,6 +142,8 @@ class RepeaterBullet extends BoardEntity {
 class RepeaterTurret extends Turret {
 	constructor(board, proto, relativePos, rotation) {
 		super(board, proto, relativePos, rotation);
+
+		this.punch = new Smooth(0);
 	}
 
 	update(delta) {
@@ -158,30 +160,58 @@ class RepeaterTurret extends Turret {
 			];
 
 			this.board.spawn(new RepeaterBullet(this.board, {}, this, [...this.relativePos], bulletVelocity));
+
+			this.punch.velocity = -5.0;
+
 		}
+
+		this.punch.tick(delta, 0, 100.0, 18.0);
 	}
 
 	draw() {
-		super.draw();
+		drawImage(this.proto.image, [0.5, 0.5], this.pos, this.rotation * Math.PI * 0.5);
+		drawImage(this.proto.image_barrel, [0.5, this.punch + 0.5], this.pos, this.rotation * Math.PI * 0.5);
 	}
 }
 
 class ShockwaveTurret extends Turret {
 	constructor(board, proto, relativePos, rotation) {
 		super(board, proto, relativePos, rotation);
+
+		this.refire = 2.0;
 	}
 
 	update(delta) {
 		super.update(delta);
 
 		if (this.refire < 0) {
-			this.refire += 0.8;
+			this.refire += 2.0;
 			if (this.refire < 0) this.refire = 0;
+
+			for (const ent of this.board.entitiesNear(this.relativePos, 1.6)) {
+				if (ent === this) continue;
+				if (ent.health) {
+					ent.health -= 2;
+				}
+			}
 		}
 	}
 
 	draw() {
-		super.draw();
+		ctx.save();
+		ctx.translate(...this.pos);
+
+		let barrel_rot = Math.pow(1.0 - (this.refire / 2.0), 8) * 10.0;
+		barrel_rot += this.refire * 2.0;
+
+		let barrel_scale = Math.pow(1.0 - (this.refire / 2.0), 12.0) * 0.5 + 1.0;
+		barrel_scale += Math.pow((this.refire / 2.0), 12.0) * 0.5;
+
+		drawImage(this.proto.image, [0.5, 0.5], [0.0, 0.0], 0);
+		ctx.scale(barrel_scale, barrel_scale);
+		drawImage(this.proto.image_barrel, [0.5, 0.5], [0.0, 0.0], barrel_rot);
+		
+		ctx.restore();
 	}
 }
 
@@ -191,6 +221,7 @@ const buildables = {
 		hurtbox: img("assets/damageprojline.svg"),
 		hurtboxAnchor: [0.5, 1.0],
 		image: img("assets/turret-repeater.svg"),
+		image_barrel: img("assets/turret-repeater-barrel.svg"),
 		cls: RepeaterTurret,
 
 		rotatable: true,
@@ -200,6 +231,7 @@ const buildables = {
 		hurtbox: img("assets/damageshock.svg"),
 		hurtboxAnchor: [0.5, 0.5],
 		image: img("assets/turret-shockwave.svg"),
+		image_barrel: img("assets/turret-shockwave-barrel.svg"),
 		cls: ShockwaveTurret,
 
 		rotatable: false,
@@ -410,6 +442,10 @@ class Board {
 	}
 
 	draw() {
+		ctx.save();
+
+		this.clip();
+
 		ctx.fillStyle = "#010915";
 		ctx.fillRect(
 			this.pos[0] - this.width * this.cell_size * 0.5,
@@ -425,6 +461,11 @@ class Board {
 		}
 		ctx.strokeStyle = "#F80";
 		ctx.lineWidth = 15;
+		ctx.lineJoin = "round";
+		ctx.stroke();
+
+		ctx.strokeStyle = "#010915";
+		ctx.lineWidth = 10;
 		ctx.stroke();
 
 		for (let x = 0; x < this.width; x++) {
@@ -446,6 +487,8 @@ class Board {
 		for (const entity of this.entities) {
 			entity.drawHealthbar();
 		}
+
+		ctx.restore();
 	}
 }
 
@@ -769,6 +812,7 @@ class PaletteEntry {
 		ctx.fillText(this.count - (this.dragging ? 1 : 0), x, y - 80);
 
 		drawImage(buildable.image, [0.5, 0.5], [x, y - 40], 0);
+		drawImage(buildable.image_barrel, [0.5, 0.5], [x, y - 40], 0);
 		// drawImage(buildable.hurtbox, buildable.hurtboxAnchor, [x, y - 40], 0);
 
 		ctx.globalAlpha = 1.0;
@@ -776,6 +820,7 @@ class PaletteEntry {
 
 		if (this.dragging) {
 			drawImage(buildable.image, [0.5, 0.5], this.dragPos, this.dragAngle);
+			drawImage(buildable.image_barrel, [0.5, 0.5], this.dragPos, this.dragAngle);
 
 			// Clip the hurtbox into the board.
 			if (this.dragBoard && this.dragBoardCell) {
@@ -791,7 +836,7 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 1),
+			new PaletteEntry("repeater", 3),
 			new PaletteEntry("shockwave", 8),
 		];
 
