@@ -1045,8 +1045,14 @@ class PaletteEntry {
 		}
 
 		if (this.dragging) {
-			this.dragBoard = game.board;
-			this.dragBoardCell = this.dragBoard.globalToCell(mouse_position);
+			for (const board of game.board_slots) {
+				if (!board) continue;
+
+				this.dragBoard = board;
+				this.dragBoardCell = this.dragBoard?.globalToCell?.(mouse_position);
+
+				if (this.dragBoardCell) break;
+			}
 
 			if (this.dragBoardCell) {
 				const cell = this.dragBoard.cell(this.dragBoardCell);
@@ -1164,10 +1170,12 @@ class Game {
 		this.palette = new Palette();
 		this.board_slots = [
 			new Board(),
+			new Board(),
 		];
+		this.boards_pan = new Smooth(0);
+		this.panning = false;
 
-		// so this commit still runs.
-		this.board = this.board_slots[0];
+		this.hover = false;
 	}
 
 	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
@@ -1175,11 +1183,71 @@ class Game {
 		this.palette.pos = [width / 2, height];
 		this.palette.update(delta);
 
+		const board_width = 6 * 64;
+		const board_spacing = board_width + 100;
+
+		const max_pan = board_spacing * (this.board_slots.length - 1);
+
+		if (!this.panning) {
+			if (this.boards_pan.value < 0 || this.boards_pan.value > max_pan) {
+				this.boards_pan.tick(delta, Math.max(0, Math.min(max_pan, this.boards_pan.value)), 200, 25);
+			} else {
+				this.boards_pan.tick(delta, this.boards_pan.value, 50, 5);
+			}
+		}
+
+		let i = 0;
 		for (const board of this.board_slots) {
 			if (!board) continue;
 
-			board.pos = [width / 2, height / 2];
+			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
 			board.update(delta);
+
+			i++;
+		}
+
+		const boardHeight = 64 * 6;
+
+		poll(this, (event) => {
+			if ((this.panning || captured(this)) && (event === event_blur || !captured(this) || !this.panning)) {
+				releaseCapture();
+				this.panning = false;
+				this.hover = false;
+			}
+
+			if (event instanceof EventMouseMove) {
+				if (this.panning) {
+					this.boards_pan.value -= event.relative[0];
+					this.boards_pan.velocity = -event.relative[0] / delta;
+				}
+
+				if (event.pos[1] > (height - boardHeight) / 2 &&
+				event.pos[1] < (height + boardHeight) / 2) {
+					this.hover = true;
+
+					return event_blur;
+				} else {
+					this.hover = false;
+				}
+			}
+
+			if (this.hover && !this.panning && event instanceof EventMouseDown && event.button == 0) {
+				capture(this);
+				this.panning = true;
+			}
+
+			if (this.panning && event instanceof EventMouseUp && event.button == 0) {
+				this.panning = false;
+				releaseCapture();
+			}
+		});
+
+		if (this.hover) {
+			cursor = "grab";
+		}
+
+		if (this.panning) {
+			cursor = "grabbing";
 		}
 	}
 
