@@ -245,6 +245,8 @@ class ShockwaveTurret extends Turret {
 
 		this.refire = 2.0;
 
+		this.refire_time = 2.5;
+
 		this.health = 4;
 		this.maxHealth = 4;
 	}
@@ -253,7 +255,7 @@ class ShockwaveTurret extends Turret {
 		super.update(delta);
 
 		if (this.refire < 0) {
-			this.refire += 2.0;
+			this.refire += this.refire_time;
 			if (this.refire < 0) this.refire = 0;
 
 			for (const ent of this.board.entitiesNear(this.relativePos, 1.6)) {
@@ -271,11 +273,13 @@ class ShockwaveTurret extends Turret {
 		ctx.save();
 		ctx.translate(...this.pos);
 
-		let barrel_rot = Math.pow(1.0 - (this.refire / 2.0), 8) * 10.0;
+		const frac = (this.refire / this.refire_time);
+
+		let barrel_rot = Math.pow(1.0 - frac, 8) * 10.0;
 		barrel_rot += this.refire * 2.0;
 
-		let barrel_scale = Math.pow(1.0 - (this.refire / 2.0), 12.0) * 0.5 + 1.0;
-		barrel_scale += Math.pow((this.refire / 2.0), 12.0) * 0.5;
+		let barrel_scale = Math.pow(1.0 - frac, 12.0) * 0.5 + 1.0;
+		barrel_scale += Math.pow(frac, 12.0) * 0.5;
 
 		drawImage(this.proto.image, [0.5, 0.5], [0.0, 0.0], 0);
 		ctx.scale(barrel_scale, barrel_scale);
