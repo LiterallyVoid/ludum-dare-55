@@ -615,7 +615,7 @@ class Board {
 
 		this.enemyTrack = [];
 
-		const trackTemperature = Math.random();
+		const trackTemperature = Math.random() * 0.8 + 0.2;
 
 		let previous_x = Math.floor(Math.random() * this.width);
 
