@@ -303,7 +303,7 @@ class ShockwaveTurret extends Turret {
 	constructor(board, proto, relativePos, rotation) {
 		super(board, proto, relativePos, rotation);
 
-		this.refire = 2.0;
+		this.refire = 0.5;
 
 		this.refire_time = 2.0;
 
@@ -321,7 +321,7 @@ class ShockwaveTurret extends Turret {
 			for (const ent of this.board.entitiesNear(this.relativePos, 1.6)) {
 				if (ent === this) continue;
 				if (ent.health) {
-					ent.health -= 0.8;
+					ent.health -= 1.5;
 				}
 			}
 
@@ -454,7 +454,7 @@ class EnemyNoop extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.3);
 
-		this.speed = 2;
+		this.speed = 1.2;
 
 		this.health = 1;
 		this.maxHealth = 1;
@@ -515,7 +515,7 @@ class EnemyGunner extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.4);
 
-		this.speed = 1.5;
+		this.speed = 1.0;
 
 		this.health = 2;
 		this.maxHealth = 2;
