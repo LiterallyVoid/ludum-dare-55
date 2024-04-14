@@ -700,7 +700,7 @@ class Board {
 		for (const pos of this.enemyTrack) {
 			ctx.lineTo(...this.cellToGlobal(pos));
 		}
-		ctx.strokeStyle = "#F80";
+		ctx.strokeStyle = "#840";
 		ctx.lineWidth = 15;
 		ctx.lineJoin = "round";
 		ctx.stroke();
