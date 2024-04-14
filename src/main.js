@@ -408,6 +408,30 @@ class EnemyNoop extends Enemy {
 	}
 }
 
+class GunnerBullet extends Bullet {
+	constructor(board, relativePos, angle) {
+		super(board, relativePos, angle, 3.0);
+
+		this.damage = 0.2;
+	}
+
+	canTarget(ent) {
+		return ent instanceof Turret;
+	}
+
+	update(delta) {
+		super.update(delta);
+	}
+
+	draw() {
+		ctx.beginPath();
+		ctx.arc(...this.pos, 6, 0, Math.PI * 2);
+
+		ctx.fillStyle = "#F22";
+		ctx.fill();
+	}
+}
+
 class EnemyGunner extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.4);
@@ -427,6 +451,8 @@ class EnemyGunner extends Enemy {
 		];
 
 		this.angle_smooth = new Smooth(0);
+
+		this.refire = 0;
 	}
 
 	update(delta) {
@@ -434,12 +460,20 @@ class EnemyGunner extends Enemy {
 
 		const target = this.chooseTarget(3);
 
+		this.refire -= delta;
 		if (target) {
 			const angle = Math.atan2(
 				target.relativePos[1] - this.relativePos[1],
 				target.relativePos[0] - this.relativePos[0],
 			);
 			this.angle_smooth.tick(delta, angle, 100.0, 25.0);
+
+			// Enemies don't deserve proper delta handling.
+			if (this.refire < 0.0) {
+				this.refire = 0.2;
+
+				this.board.spawn(new GunnerBullet(this.board, [...this.relativePos], angle));
+			}
 		} else {
 			this.angle_smooth.tick(delta, this.angle_forwards, 100.0, 25.0);
 		}
