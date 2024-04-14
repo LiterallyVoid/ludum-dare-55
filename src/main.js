@@ -1254,9 +1254,8 @@ class PaletteEntry {
 			drawImage(buildable.image, [0.5, 0.5], this.dragPos, this.dragAngle);
 			drawImage(buildable.image_barrel, [0.5, 0.5], this.dragPos, this.dragAngle);
 
-			// Clip the hurtbox into the board.
 			if (this.dragBoard && this.dragBoardCell) {
-				this.dragBoard.clip();
+				// this.dragBoard.clip();
 				drawImage(buildable.hurtbox, buildable.hurtboxAnchor, this.dragPos, this.dragAngle);
 			}
 		}
