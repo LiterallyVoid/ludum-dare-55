@@ -75,7 +75,7 @@ class BoardEntity {
 	}
 
 	drawHealthbar() {
-		if (!this.maxHealth) return;
+		if (this.health == null) return;
 
 		ctx.save();
 		ctx.translate(this.pos[0], this.pos[1] - this.radius * this.board.cell_size);
@@ -489,8 +489,6 @@ class Enemy extends BoardEntity {
 	}
 
 	onDamage(amount) {
-		// Enemies are invincible until they are a respectable distance out.
-		if (this.next_waypoint_index < 2) return;
 		super.onDamage(amount);
 
 		this.playSound(global_sounds.enemy_hitsound, 1.0);
@@ -539,6 +537,10 @@ class Enemy extends BoardEntity {
 		if (movement_this_frame > pending) {
 			movement_this_frame = pending;
 			this.next_waypoint_index++;
+
+			if (this.next_waypoint_index >= 2) {
+				this.health = this.maxHealth;
+			}
 		}
 
 		this.relativePos[0] += vec[0] * movement_this_frame;
@@ -575,7 +577,6 @@ class EnemyNoop extends Enemy {
 
 		this.speed = 1.2;
 
-		this.health = 3;
 		this.maxHealth = 3;
 
 		this.flavor_spawn = [
@@ -636,7 +637,6 @@ class EnemyGunner extends Enemy {
 
 		this.speed = 1.0;
 
-		this.health = 2;
 		this.maxHealth = 2;
 
 		this.flavor_spawn = [
@@ -799,12 +799,12 @@ class Board {
 
 		let spawn_time = 3 - animation_time;
 
-		const waves = Math.random() * (3 + this.game.level * 0.5) + 2;
+		const waves = Math.random() * (2 + this.game.level * 0.1) + 3;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
 		for (let i = 0; i < waves; i++) {
-			const count = Math.random() * 3 + 1;
+			const count = Math.random() * (1 + this.game.level * 0.3) + 1;
 			const cls = enemies[Math.floor(Math.random() * enemies.length)];
 			for (let i = 0; i < count; i++) {
 				this.enemies_to_spawn.push({
@@ -1548,7 +1548,7 @@ class Game {
 
 		this.level = 0;
 
-		this.board_slots.push(new Board(this, ["down", "in"], 0));
+		this.board_slots.push(new Board(this, ["up", "in"], 0));
 
 	}
 
@@ -1610,7 +1610,7 @@ class Game {
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
 
-				this.level += 0.25;
+				this.level += 0.5;
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
