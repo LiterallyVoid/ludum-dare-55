@@ -422,6 +422,8 @@ class Board {
 				}
 			}
 		}
+
+		this.entities.push(new EnemyNoop(this, [...this.enemyTrack[0]]));
 	}
 
 	spawn(ent) {
