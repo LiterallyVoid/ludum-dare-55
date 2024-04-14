@@ -140,8 +140,7 @@ class RepeaterBullet extends BoardEntity {
 	}
 
 	draw() {
-		ctx.fillStyle = "#F0F";
-		ctx.fillRect(this.pos[0] - 5, this.pos[1] - 5, 10, 10);
+		drawImage(this.proto.image_bullet, [0.5, 0.5], this.pos, this.angle);
 	}
 }
 
@@ -228,6 +227,7 @@ const buildables = {
 		hurtboxAnchor: [0.5, 1.0],
 		image: img("assets/turret-repeater.svg"),
 		image_barrel: img("assets/turret-repeater-barrel.svg"),
+		image_bullet: img("assets/repeater-bullet.svg"),
 		cls: RepeaterTurret,
 
 		rotatable: true,
