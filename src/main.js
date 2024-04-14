@@ -874,7 +874,6 @@ class Board { constructor(game, animation, animation_time) {
 
 		// Reversed, we're going to spawn enemies going from the *end* to avoid needless copying (when popping from the front.)
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
-		this.enemies_to_spawn = [];
 
 		this.game_over = false;
 		this.game_over_lost = false;
@@ -1719,13 +1718,13 @@ class Game {
 				this.hover = false;
 			}
 
-			// if (event instanceof EventKeyDown) {
-			// 	if (event.key === "F2") this.addToken();
-			// 	if (event.key === "F3") this.removeToken();
-			// 	if (event.key === "F4") this.addScore(50823);
-			// 	if (event.key === "F5") this.board_slots[0].onLost();
-			// 	if (event.key === "F6") this.level++;
-			// }
+			if (event instanceof EventKeyDown) {
+				if (event.key === "2") this.addToken();
+				if (event.key === "3") this.removeToken();
+				if (event.key === "4") this.addScore(50823);
+				if (event.key === "5") this.board_slots[0].onLost();
+				if (event.key === "6") this.level++;
+			}
 
 			if (event instanceof EventMouseMove) {
 				if (this.panning) {
@@ -1844,7 +1843,7 @@ class Game {
 
 		ctx.font = "Bold 30px sans";
 		ctx.fillStyle = "#FFF";
-		ctx.fillText(`${this.score.toLocaleString()} levels cleared`, -50, 40);
+		ctx.fillText(`${this.score.toLocaleString()} level${this.score == 1 ? "" : "s"} cleared`, -50, 40);
 
 		ctx.restore();
 
