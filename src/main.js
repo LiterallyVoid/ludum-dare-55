@@ -93,6 +93,8 @@ class Turret extends BoardEntity {
 
 		this.health = 3;
 		this.maxHealth = 3;
+
+		this.team = 2;
 	}
 
 	update(delta) {
@@ -297,6 +299,10 @@ class Enemy extends BoardEntity {
 		this.speed = 1;
 
 		this.next_waypoint_index = 1;
+
+		this.team = 1;
+
+		this.angle_forwards = 0;
 	}
 
 	update(delta) {
@@ -314,6 +320,8 @@ class Enemy extends BoardEntity {
 			next_waypoint[0] - current_waypoint[0],
 			next_waypoint[1] - current_waypoint[1],
 		];
+
+		this.angle_forwards = Math.atan2(vec[1], vec[0]);
 
 		const len = Math.hypot(vec[0], vec[1]);
 		vec[0] /= len; vec[1] /= len;
@@ -337,7 +345,7 @@ class Enemy extends BoardEntity {
 
 class EnemyNoop extends Enemy {
 	constructor(board, relativePos) {
-		super(board, relativePos, 0.4);
+		super(board, relativePos, 0.3);
 
 		this.health = 1;
 		this.maxHealth = 1;
@@ -349,6 +357,43 @@ class EnemyNoop extends Enemy {
 		this.flavor_die = [
 			"ow my insides",
 		];
+	}
+
+	update(delta) {
+		super.update(delta);
+	}
+
+	draw() {
+		ctx.save();
+		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.beginPath();
+		ctx.arc(0, 0, 10, 0, Math.PI * 2);
+
+		ctx.fillStyle = "#28A";
+		ctx.fill();
+		ctx.restore();
+	}
+}
+
+class EnemyGunner extends Enemy {
+	constructor(board, relativePos) {
+		super(board, relativePos, 0.4);
+
+		this.speed = 0.7;
+
+		this.health = 2;
+		this.maxHealth = 2;
+
+		this.flavor_spawn = [
+			"I’ve got more bullets than I can count, and that’s not saying much because I can’t count!",
+		];
+
+		this.flavor_die = [
+			"Remember my name!",
+			"No...",
+		];
+
+		this.angle = new Smooth(0);
 	}
 
 	update(delta) {
@@ -453,7 +498,26 @@ class Board {
 			}
 		}
 
-		this.entities.push(new EnemyNoop(this, [...this.enemyTrack[0]]));
+		this.enemies_to_spawn = [];
+		this.enemy_spawn_timer = 0;
+
+		for (let i = 0; i < 6; i++) {
+			this.enemies_to_spawn.push({
+				ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
+				time: i * 0.5,
+			});
+		}
+
+		for (let i = 0; i < 10; i++) {
+			this.enemies_to_spawn.push({
+				ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
+				time: i * 0.3 + 5,
+			});
+		}
+
+		// Reversed, we're going to spawn enemies going from the *end* to avoid needless copying (when popping from the front.)
+		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
+
 	}
 
 	spawn(ent) {
@@ -490,6 +554,15 @@ class Board {
 				continue;
 			}
 		}
+
+		const last_enemy = () => this.enemies_to_spawn[this.enemies_to_spawn.length - 1];
+
+		while (this.enemies_to_spawn.length > 0 && this.enemy_spawn_timer > last_enemy().time) {
+			const { ent } = this.enemies_to_spawn.pop();
+			this.spawn(ent);
+		}
+
+		this.enemy_spawn_timer += delta;
 	}
 
 	cell(pos) {
