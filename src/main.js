@@ -239,6 +239,34 @@ class ShockEffect extends BoardEntity {
 	}
 }
 
+class BannerEffect {
+	constructor(board, text) {
+		this.board = board;
+
+		this.pos = [0, 0];
+		this.text = text;
+
+		this.pos = [0, 0];
+	}
+
+	update(delta) {
+		this.pos = this.board.pos;
+	}
+
+	draw() {
+		ctx.save();
+		ctx.translate(...this.pos);
+
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.font = "Bold 30px sans";
+		ctx.fillStyle = "#FFF";
+
+		ctx.fillText(this.text, 0, 0);
+		ctx.restore();
+	}
+}
+
 class ShockwaveTurret extends Turret {
 	constructor(board, proto, relativePos, rotation) {
 		super(board, proto, relativePos, rotation);
@@ -333,6 +361,7 @@ class Enemy extends BoardEntity {
 		const next_waypoint = this.board.enemyTrack[this.next_waypoint_index];
 		if (!next_waypoint) {
 			this.dead = true; // :'(
+			this.board.onLost();
 
 			return;
 		}
@@ -598,23 +627,28 @@ class Board {
 		this.enemies_to_spawn = [];
 		this.enemy_spawn_timer = 0;
 
-		for (let i = 0; i < 6; i++) {
-			this.enemies_to_spawn.push({
-				ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
-				time: i * 1,
-			});
-		}
+		this.enemies_to_spawn.push({
+			ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
+			time: 0,
+		});
+		// for (let i = 0; i < 6; i++) {
+		// 	this.enemies_to_spawn.push({
+		// 		ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
+		// 		time: i * 1,
+		// 	});
+		// }
 
-		for (let i = 0; i < 10; i++) {
-			this.enemies_to_spawn.push({
-				ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
-				time: i * 0.5 + 8,
-			});
-		}
+		// for (let i = 0; i < 10; i++) {
+		// 	this.enemies_to_spawn.push({
+		// 		ent: new EnemyNoop(this, [...this.enemyTrack[0]]),
+		// 		time: i * 0.5 + 8,
+		// 	});
+		// }
 
 		// Reversed, we're going to spawn enemies going from the *end* to avoid needless copying (when popping from the front.)
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
 
+		this.game_over = false;
 	}
 
 	spawn(ent) {
@@ -626,8 +660,23 @@ class Board {
 	}
 
 	update(delta) {
+		// Important to do this first, as otherwise if there's a single enemy, there's a one frame gap between it spawning -> it registering on the `has_enemies` scale.
+		const last_enemy = () => this.enemies_to_spawn[this.enemies_to_spawn.length - 1];
+
+		while (this.enemies_to_spawn.length > 0 && this.enemy_spawn_timer > last_enemy().time) {
+			const { ent } = this.enemies_to_spawn.pop();
+			this.spawn(ent);
+		}
+
+		this.enemy_spawn_timer += delta;
+
+		let has_enemies = false;
 		for (let i = 0; i < this.entities.length; i++) {
 			const ent = this.entities[i];
+
+			if (ent instanceof Enemy) {
+				has_enemies = true;
+			}
 
 			ent.update(delta);
 			if (ent.dead) {
@@ -652,14 +701,16 @@ class Board {
 			}
 		}
 
-		const last_enemy = () => this.enemies_to_spawn[this.enemies_to_spawn.length - 1];
-
-		while (this.enemies_to_spawn.length > 0 && this.enemy_spawn_timer > last_enemy().time) {
-			const { ent } = this.enemies_to_spawn.pop();
-			this.spawn(ent);
+		if (this.enemies_to_spawn.length === 0 && !has_enemies && !this.game_over) {
+			this.game_over = true;
+			this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
 		}
+	}
 
-		this.enemy_spawn_timer += delta;
+	onLost() {
+		if (this.game_over) return;
+		this.game_over = true;
+		this.effects.push(new BannerEffect(this, "LOST"));
 	}
 
 	cell(pos) {
@@ -1196,7 +1247,7 @@ class Game {
 			} else {
 				this.boards_pan.tick(delta, this.boards_pan.value, 50, 5);
 			}
-		}
+	}
 
 		let i = 0;
 		for (const board of this.board_slots) {
