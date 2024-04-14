@@ -785,7 +785,7 @@ class GunnerBullet extends Bullet {
 
 	didDamage(ent) {
 		if (ent.dead && !this.controller.dead) {
-			this.controller.spawnFlavor(this.controller.flavor_destruction);
+			this.controller.createFlavor(this.controller.flavor_destruction);
 		}
 	}
 
