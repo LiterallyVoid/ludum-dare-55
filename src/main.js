@@ -36,8 +36,6 @@ const cellTypes = {
 
 sound.playMusic("music/prejam-dontuse.mp3"); 
 
-let previous_frame = performance.now();
-
 class BoardEntity {
 	constructor(board, relativePos, radius) {
 		this.board = board;
@@ -76,6 +74,102 @@ class BoardEntity {
 			ctx.fillRect(x - 5, -5, 10 * frac, 5);
 		}
 
+		ctx.restore();
+	}
+}
+
+// extends entity haha this is fine :sunglasses:
+// this is definitely for javascript JIT shape optimization and definitely not because i am very lazy
+class ShockEffect extends BoardEntity {
+	constructor(board, relativePos, radius) {
+		super(board, relativePos, radius);
+
+		this.time = 0;
+	}
+
+	update(delta) {
+		super.update(delta);
+
+		this.time += delta * 2;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		const radfrac = 1.0 - Math.pow(1.0 - this.time, 6.0);
+		const line_width = Math.pow(1.0 - this.time, 2.0);
+		const fill_alpha = (1.0 - Math.pow(this.time, 2.0)) * 0.5;
+		ctx.beginPath();
+		ctx.arc(...this.pos, this.radius * this.board.cell_size * radfrac, 0, Math.PI * 2);
+
+		ctx.strokeStyle = "rgb(255, 60, 0)";
+		ctx.lineWidth = line_width * 40.0;
+		ctx.stroke();
+
+
+
+		ctx.fillStyle = `rgba(255, 60, 0, ${fill_alpha * 100}%)`;
+		ctx.fill();
+	}
+}
+
+class BuildableReturnEffect extends BoardEntity {
+	constructor(board, relativePos) {
+		super(board, relativePos);
+
+		this.time = 0;
+
+		this.radius = 2;
+	}
+
+	update(delta) {
+		super.update(delta);
+
+		this.time += delta * 2;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		const radfrac = 1.0 - Math.pow(1.0 - this.time, 6.0);
+		const line_width = Math.pow(1.0 - this.time, 2.0);
+		const fill_alpha = (1.0 - Math.pow(this.time, 2.0)) * 0.5;
+		ctx.beginPath();
+		ctx.arc(...this.pos, this.radius * this.board.cell_size * radfrac, 0, Math.PI * 2);
+
+		ctx.strokeStyle = "rgb(0, 220, 255)";
+		ctx.lineWidth = line_width * 40.0;
+		ctx.stroke();
+
+
+
+		ctx.fillStyle = `rgba(0, 220, 255, ${fill_alpha * 100}%)`;
+		ctx.fill();
+	}
+}
+
+class BannerEffect {
+	constructor(board, text) {
+		this.board = board;
+
+		this.pos = [0, 0];
+		this.text = text;
+
+		this.pos = [0, 0];
+	}
+
+	update(delta) {
+		this.pos = this.board.pos;
+	}
+
+	draw() {
+		ctx.save();
+		ctx.translate(...this.pos);
+
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.font = "Bold 30px sans";
+		ctx.fillStyle = "#FFF";
+
+		ctx.fillText(this.text, 0, 0);
 		ctx.restore();
 	}
 }
@@ -202,68 +296,6 @@ class RepeaterTurret extends Turret {
 	draw() {
 		drawImage(this.proto.image, [0.5, 0.5], this.pos, this.rotation * Math.PI * 0.5);
 		drawImage(this.proto.image_barrel, [0.5, this.punch + 0.5], this.pos, this.rotation * Math.PI * 0.5);
-	}
-}
-
-// extends entity haha this is fine :sunglasses:
-// this is definitely for javascript JIT shape optimization and definitely not because i am very lazy
-class ShockEffect extends BoardEntity {
-	constructor(board, relativePos, radius) {
-		super(board, relativePos, radius);
-
-		this.time = 0;
-	}
-
-	update(delta) {
-		super.update(delta);
-
-		this.time += delta * 2;
-		if (this.time > 1) this.dead = true;
-	}
-
-	draw() {
-		const radfrac = 1.0 - Math.pow(1.0 - this.time, 6.0);
-		const line_width = Math.pow(1.0 - this.time, 2.0);
-		const fill_alpha = (1.0 - Math.pow(this.time, 2.0)) * 0.5;
-		ctx.beginPath();
-		ctx.arc(...this.pos, this.radius * this.board.cell_size * radfrac, 0, Math.PI * 2);
-
-		ctx.strokeStyle = "rgb(255, 60, 0)";
-		ctx.lineWidth = line_width * 40.0;
-		ctx.stroke();
-
-
-
-		ctx.fillStyle = `rgba(255, 60, 0, ${fill_alpha * 100}%)`;
-		ctx.fill();
-	}
-}
-
-class BannerEffect {
-	constructor(board, text) {
-		this.board = board;
-
-		this.pos = [0, 0];
-		this.text = text;
-
-		this.pos = [0, 0];
-	}
-
-	update(delta) {
-		this.pos = this.board.pos;
-	}
-
-	draw() {
-		ctx.save();
-		ctx.translate(...this.pos);
-
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.font = "Bold 30px sans";
-		ctx.fillStyle = "#FFF";
-
-		ctx.fillText(this.text, 0, 0);
-		ctx.restore();
 	}
 }
 
@@ -713,7 +745,7 @@ class Board {
 
 			for (const entity of this.entities) {
 				if (entity instanceof Turret) {
-					// this.spawn(new BuildableReturnEffect(entity.relativePos));
+					this.effects.push(new BuildableReturnEffect(this, entity.relativePos));
 
 					this.game.palette.stock(entity.proto.key);
 
@@ -1024,9 +1056,14 @@ class PaletteEntry {
 
 		// In half-turns: always 0 / 1 / 2 / 3
 		this.rotation = 0;
+
+		this.count_pop = 0;
 	}
 
 	update(delta) {
+
+		this.count_pop = Math.max(0, this.count_pop - delta * 2);
+
 		if (this.dragging && !captured(this)) {
 			this.dragging = false;
 		}
@@ -1161,7 +1198,6 @@ class PaletteEntry {
 		y -= this.popup;
 
 		ctx.fillStyle = "#FFF";
-		ctx.font = "Bold 20px sans";
 		ctx.textAlign = "center";
 
 		const count = this.count - (this.dragging ? 1 : 0);
@@ -1173,6 +1209,9 @@ class PaletteEntry {
 			ctx.globalAlpha = 0.5;
 		}
 
+		const count_size = 20 + (1.0 - Math.pow(1.0 - this.count_pop, 2.0)) * 60;
+
+		ctx.font = `Bold ${count_size}px sans`;
 		ctx.fillText(this.count - (this.dragging ? 1 : 0), x, y - 80);
 
 		if (!this.dragging) {
@@ -1238,6 +1277,7 @@ class Palette {
 			}
 
 			item.count++;
+			item.count_pop = 1;
 			return;
 		}
 
@@ -1249,6 +1289,7 @@ class Game {
 	constructor() {
 		this.palette = new Palette();
 		this.board_slots = [
+			new Board(this),
 			new Board(this),
 			new Board(this),
 		];
@@ -1359,6 +1400,8 @@ function draw() {
 	ctx.restore();
 
 }
+
+let previous_frame = performance.now();
 
 function tick(time) {
 	const delta = (time - previous_frame) / 1000;
