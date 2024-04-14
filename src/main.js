@@ -86,14 +86,28 @@ class BoardEntity {
 			const frac = Math.max(0, Math.min(1, this.health - i));
 
 			ctx.fillStyle = "#F35";
-			ctx.fillRect(x - 5, -5, 10, 5);
+
+			ctx.beginPath();
+			ctx.roundRect(x - 5, -5, 10, 5, 1);
+			ctx.fill();
 
 			if (frac == 0) {
 				continue;
 			}
 
 			ctx.fillStyle = "#3F3";
-			ctx.fillRect(x - 5, -5, 10 * frac, 5);
+
+			ctx.save();
+
+			ctx.beginPath();
+			ctx.rect(x - 5, -5, 10 * frac, 5);
+			ctx.clip();
+
+			ctx.beginPath();
+			ctx.roundRect(x - 5, -5, 10, 5, 1);
+			ctx.fill();
+
+			ctx.restore();
 		}
 
 		ctx.restore();
@@ -1474,8 +1488,8 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 6),
-			new PaletteEntry("shockwave", 4),
+			new PaletteEntry("repeater", 9),
+			new PaletteEntry("shockwave", 9),
 		];
 
 		this.pos = [0, 0];
@@ -1549,7 +1563,6 @@ class Game {
 		this.level = 0;
 
 		this.board_slots.push(new Board(this, ["up", "in"], 0));
-
 	}
 
 	addScore(count) {
@@ -1611,6 +1624,10 @@ class Game {
 				board = this.board_slots[i];
 
 				this.level += 1 / this.board_slots.length;
+
+				if (!board.game_over_lost) {
+					this.addScore(1);
+				}
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
@@ -1623,14 +1640,14 @@ class Game {
 		if (this.level >= 2) {
 			desired_slots++;
 		}
-		if (this.level >= 4) {
+		if (this.level >= 6) {
 			desired_slots++;
 		}
-		if (this.level >= 8) {
+		if (this.level >= 12) {
 			desired_slots++;
 		}
 		if (this.board_slots.length < desired_slots) {
-			this.board_slots.push(new Board(this, ["down", "in"], 0));
+			this.board_slots.push(new Board(this, ["up", "in"], 0));
 		}
 
 		poll(this, (event) => {
