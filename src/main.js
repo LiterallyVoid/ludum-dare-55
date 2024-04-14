@@ -279,7 +279,7 @@ class RepeaterTurret extends Turret {
 	update(delta) {
 		super.update(delta);
 		if (this.refire < 0) {
-			this.refire += 0.4;
+			this.refire += 0.7;
 			if (this.refire < 0) this.refire = 0;
 
 			const angle = this.rotation * Math.PI * 0.5;
@@ -549,7 +549,7 @@ class EnemyGunner extends Enemy {
 
 			// Enemies don't deserve proper delta handling.
 			if (this.refire < 0.0) {
-				this.refire = 0.6;
+				this.refire = 1;
 
 				this.board.spawn(new GunnerBullet(this.board, [...this.relativePos], angle));
 			}
@@ -669,7 +669,7 @@ class Board {
 
 		let spawn_time = 0;
 
-		const waves = Math.random() * 3 + 2;
+		const waves = Math.random() * 2 + 1;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
@@ -1268,7 +1268,7 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 3),
+			new PaletteEntry("repeater", 5),
 			new PaletteEntry("shockwave", 8),
 		];
 
