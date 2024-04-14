@@ -36,6 +36,20 @@ const cellTypes = {
 		buildable: false,
 		fliable: false,
 	},
+
+	detritus1: {
+		image: img("assets/detritus-1.svg"),
+
+		buildable: false,
+		fliable: false,
+	},
+
+	detritus2: {
+		image: img("assets/detritus-2.svg"),
+
+		buildable: false,
+		fliable: false,
+	},
 };
 
 sound.playMusic("music/action.mp3"); 
@@ -130,37 +144,62 @@ class ShockEffect extends BoardEntity {
 	}
 }
 
-class BuildableReturnEffect extends BoardEntity {
-	constructor(board, relativePos) {
-		super(board, relativePos);
-
-		this.time = 0;
+class BuildableReturnEffect {
+	constructor(pos, angle, name, time, paletteEntry) {
+		this.pos = pos;
+		this.proto = buildables[name];
+		this.time = time;
 
 		this.radius = 2;
+
+		this.posSmooth = new SmoothVec(pos);
+		this.angleSmooth = new SmoothAngle(angle);
+
+		const jitter = 1200;
+		this.posSmooth.velocity = [(Math.random() * 2 - 1) * jitter, (Math.random() * 2 - 1) * jitter];
+
+		this.paletteEntry = paletteEntry;
 	}
 
 	update(delta) {
-		super.update(delta);
+		this.time += delta;
+		if (this.time > 0.5) {
+			this.dead = true;
+		}
 
-		this.time += delta * 2;
-		if (this.time > 1) this.dead = true;
+		if (this.time > 0) {
+			const dest_pos = [
+				this.paletteEntry.pos[0],
+				this.paletteEntry.pos[1] - 40,
+			];
+			this.posSmooth.tick(delta, dest_pos, 70.0, 15.0);
+			this.angleSmooth.tick(delta, 0, 70.0, 15.0);
+		}
 	}
 
 	draw() {
-		const radfrac = 1.0 - Math.pow(1.0 - this.time, 6.0);
-		const line_width = Math.pow(1.0 - this.time, 2.0);
-		const fill_alpha = (1.0 - Math.pow(this.time, 2.0)) * 0.5;
-		ctx.beginPath();
-		ctx.arc(...this.pos, this.radius * this.board.cell_size * radfrac, 0, Math.PI * 2);
+		if (this.time > 0) {
+			const frac = this.time / 0.5;
+			const radfrac = 1.0 - Math.pow(1.0 - frac, 6.0);
+			const line_width = Math.pow(1.0 - frac, 2.0);
+			const fill_alpha = (1.0 - Math.pow(frac, 2.0)) * 0.5;
+			ctx.beginPath();
+			ctx.arc(...this.pos, this.radius * 64 * radfrac, 0, Math.PI * 2);
 
-		ctx.strokeStyle = "rgb(0, 220, 255)";
-		ctx.lineWidth = line_width * 40.0;
-		ctx.stroke();
+			ctx.strokeStyle = "rgb(0, 220, 255)";
+			ctx.lineWidth = line_width * 40.0;
+			ctx.stroke();
 
 
+			ctx.fillStyle = `rgba(0, 220, 255, ${fill_alpha * 100}%)`;
+			ctx.fill();
+		}
 
-		ctx.fillStyle = `rgba(0, 220, 255, ${fill_alpha * 100}%)`;
-		ctx.fill();
+		ctx.save();
+		ctx.globalAlpha = Math.max(0, Math.min(1, 1.0 - (this.time / 0.5)));
+		drawImage(this.proto.image, [0.5, 0.5], this.posSmooth, this.angleSmooth);
+		drawImage(this.proto.image_barrel, [0.5, 0.5], this.posSmooth, this.angleSmooth);
+		ctx.restore();
 	}
 }
 
@@ -739,7 +778,13 @@ class Board {
 			for (let y = 0; y < this.height; y++) {
 				if (this.grid[x][y].onTrack) continue;
 				if (Math.random() < fillProb) {
-					this.grid[x][y].backing = cellTypes.mountain;
+					if (Math.random() < 0.1) {
+						this.grid[x][y].backing = cellTypes.detritus1;
+					} else if (Math.random() < 0.1) {
+						this.grid[x][y].backing = cellTypes.detritus2;
+					} else {
+						this.grid[x][y].backing = cellTypes.mountain;
+					}
 				}
 			}
 		}
@@ -749,7 +794,7 @@ class Board {
 
 		let spawn_time = 3 - animation_time;
 
-		const waves = Math.random() * 3 + 2;
+		const waves = 1; // Math.random() * 3 + 2;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
@@ -785,6 +830,7 @@ class Board {
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
 
 		this.game_over = false;
+		this.game_over_lost = false;
 		this.game_over_time = 0;
 
 		this.background_image = img("assets/board.svg");
@@ -887,14 +933,16 @@ class Board {
 		global_sounds.jingle_arena_win.play(1, 0);
 		this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
 
+		let time = -0.1;
 		for (const entity of this.entities) {
-			if (entity instanceof Turret) {
-				this.effects.push(new BuildableReturnEffect(this, entity.relativePos));
+			if (!(entity instanceof Turret)) continue;
 
-				this.game.palette.stock(entity.proto.key);
+			const palette_entry = this.game.palette.stock(entity.proto.key);
 
-				entity.dead = true;
-			}
+			this.game.effects.push(new BuildableReturnEffect(entity.pos, entity.rotation * Math.PI * 0.5, entity.proto.key, time, palette_entry));
+
+			entity.dead = true;
+			time -= 0.1;
 		}
 
 		this.game.addToken();
@@ -908,6 +956,8 @@ class Board {
 		global_sounds.jingle_arena_lose.play(1, 0);
 
 		this.game_over = true;
+		this.game_over_lost = true;
+
 		this.effects.push(new BannerEffect(this, "LOST"));
 
 		this.game.removeToken();
@@ -1031,6 +1081,17 @@ class Board {
 			entity.drawHealthbar();
 		}
 
+		if (this.game_over_lost) {
+			const margin = 10;
+			ctx.fillStyle = `rgba(255, 0, 72, 20%)`;
+			ctx.fillRect(
+				this.pos[0] - this.width * this.cell_size * 0.5,
+				this.pos[1] - this.height * this.cell_size * 0.5 - margin,
+				this.width * this.cell_size,
+				this.height * this.cell_size + margin * 2,
+			);
+		}
+
 		drawImage(this.background_image, [0.5, 0.5], this.pos, 0);
 
 		for (const effect of this.effects) {
@@ -1127,7 +1188,8 @@ function poll(obj, callback) {
 }
 
 function capture(obj) {
-	console.assert(event_capture == null);
+	// This went off at some point during development. /shrug but I'm gonna get rid of it anyway.
+	//console.assert(event_capture == null);
 	event_capture = obj;
 }
 
@@ -1436,6 +1498,8 @@ class Palette {
 		}
 	}
 
+	// Stock `buildable` (string key of `buildables`)
+	// Return the palette entry of that buildable.
 	stock(buildable) {
 		for (const item of this.deck) {
 			if (item.item !== buildable) {
@@ -1444,7 +1508,8 @@ class Palette {
 
 			item.count++;
 			item.count_pop = 1;
-			return;
+
+			return item;
 		}
 
 		console.assert(false, "stock() stocked an item not in palette");
@@ -1476,6 +1541,8 @@ class Game {
 		this.token_image_outline = img("assets/token-outline.svg");
 
 		this.score = 0;
+
+		this.effects = [];
 	}
 
 	addScore(count) {
@@ -1522,7 +1589,7 @@ class Game {
 			} else {
 				this.boards_pan.tick(delta, this.boards_pan.value, 50, 5);
 			}
-	}
+		}
 
 		let i = 0;
 		for (let board of this.board_slots) {
@@ -1597,6 +1664,17 @@ class Game {
 			timer.time += delta * 3;
 			timer.time = Math.min(1, timer.time);
 		}
+
+		for (let i = 0; i < this.effects.length; i++) {
+			const effect = this.effects[i];
+			effect.update(delta);
+
+			if (effect.dead) {
+				this.effects.splice(i, 1);
+				i--;
+				continue;
+			}
+		}
 	}
 
 	draw() {
@@ -1668,6 +1746,9 @@ class Game {
 
 		ctx.restore();
 
+		for (const effect of this.effects) {
+			effect.draw();
+		}
 	}
 }
 

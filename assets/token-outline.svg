@@ -24,9 +24,9 @@
      inkscape:deskcolor="#a3a3a3"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="2"
-     inkscape:cx="-8.75"
-     inkscape:cy="33"
+     inkscape:zoom="8"
+     inkscape:cx="39.4375"
+     inkscape:cy="51.875"
      inkscape:window-width="1920"
      inkscape:window-height="1052"
      inkscape:window-x="0"
@@ -56,11 +56,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <circle
-       style="opacity:1;fill:none;fill-opacity:1;stroke:#fefefe;stroke-width:0.89958332;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:2.69875002,2.87866669;paint-order:stroke markers fill;stroke-opacity:1;stroke-dashoffset:0"
-       id="path6"
-       cx="8.4666662"
-       cy="8.4666662"
-       r="6.3499999" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.52916666;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:1;stroke-dasharray:3.17499983,0.52916664;stroke-dashoffset:0.26458332"
+       d="M 8.4666663,4.233333 C 5.2916664,1.0583333 2.1166666,3.1749998 2.1166666,6.3499997 c 0,3.6560323 6.3499997,8.4666663 6.3499997,8.4666663 0,0 6.3499997,-4.233333 6.3499997,-8.4666663 0,-3.1749999 -3.175,-5.2916664 -6.3499997,-2.1166667 z"
+       id="path1"
+       sodipodi:nodetypes="cscsc" />
   </g>
 </svg>
