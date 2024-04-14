@@ -454,7 +454,7 @@ class EnemyGunner extends Enemy {
 			"No...",
 		];
 
-		this.angle_smooth = new Smooth(0);
+		this.angle_smooth = new SmoothAngle(0);
 
 		this.refire = 0;
 	}
