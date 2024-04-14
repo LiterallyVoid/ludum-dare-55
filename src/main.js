@@ -1608,7 +1608,6 @@ class Game {
 	}
 
 	over() {
-		return true;
 		return this.lost || this.level_linear >= 50;
 	}
 
@@ -1732,19 +1731,25 @@ class Game {
 		}
 
 		poll(this, (event) => {
+			if (this.over()) {
+				this.panning = false;
+				this.hover = false;
+				return;
+			}
+
 			if ((this.panning || captured(this)) && (event === event_blur || !captured(this) || !this.panning)) {
 				releaseCapture();
 				this.panning = false;
 				this.hover = false;
 			}
 
-			if (event instanceof EventKeyDown) {
-				if (event.key === "2") this.addToken();
-				if (event.key === "3") this.removeToken();
-				if (event.key === "4") this.addScore(50823);
-				if (event.key === "5") this.board_slots[0].onLost();
-				if (event.key === "6") this.level++;
-			}
+			// if (event instanceof EventKeyDown) {
+			// 	if (event.key === "2") this.addToken();
+			// 	if (event.key === "3") this.removeToken();
+			// 	if (event.key === "4") this.addScore(50823);
+			// 	if (event.key === "5") this.board_slots[0].onLost();
+			// 	if (event.key === "6") this.level++;
+			// }
 
 			if (event instanceof EventMouseMove) {
 				if (this.panning) {
@@ -1902,7 +1907,10 @@ class Game {
 				ctx.fillText(`You survived to level ${this.level_linear}, out of 50`, 0, 0);
 			}
 			ctx.font = "20px sans";
-			ctx.fillText(`...and cleared ${this.score} levels on the way.`, 0, 50);
+			ctx.fillText(`...and cleared ${this.score} levels on the way.`, 0, 40);
+
+			ctx.font = "15px sans";
+			ctx.fillText("Press ESC to open the menu.", 0, 90);
 
 			ctx.restore();
 		}
