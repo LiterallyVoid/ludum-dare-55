@@ -179,6 +179,40 @@ class RepeaterTurret extends Turret {
 	}
 }
 
+// extends entity haha this is fine :sunglasses:
+// this is definitely for javascript JIT shape optimization and definitely not because i am very lazy
+class ShockEffect extends BoardEntity {
+	constructor(board, relativePos, radius) {
+		super(board, relativePos, radius);
+
+		this.time = 0;
+	}
+
+	update(delta) {
+		super.update(delta);
+
+		this.time += delta * 2;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		const radfrac = 1.0 - Math.pow(1.0 - this.time, 6.0);
+		const line_width = Math.pow(1.0 - this.time, 2.0);
+		const fill_alpha = (1.0 - Math.pow(this.time, 2.0)) * 0.5;
+		ctx.beginPath();
+		ctx.arc(...this.pos, this.radius * this.board.cell_size * radfrac, 0, Math.PI * 2);
+
+		ctx.strokeStyle = "rgb(255, 60, 0)";
+		ctx.lineWidth = line_width * 40.0;
+		ctx.stroke();
+
+
+
+		ctx.fillStyle = `rgba(255, 60, 0, ${fill_alpha * 100}%)`;
+		ctx.fill();
+	}
+}
+
 class ShockwaveTurret extends Turret {
 	constructor(board, proto, relativePos, rotation) {
 		super(board, proto, relativePos, rotation);
@@ -199,6 +233,8 @@ class ShockwaveTurret extends Turret {
 					ent.health -= 2;
 				}
 			}
+
+			this.board.effects.push(new ShockEffect(this.board, this.relativePos, 1.6));
 		}
 	}
 
