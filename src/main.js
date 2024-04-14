@@ -999,6 +999,7 @@ class Board {
 			time -= 0.2;
 		}
 
+		this.game.onLevelCompleted();
 		this.game.addToken();
 		this.game.addScore(1);
 
@@ -1015,6 +1016,7 @@ class Board {
 
 		this.effects.push(new BannerEffect(this, "LOST"));
 
+		this.game.onLevelCompleted();
 		this.game.removeToken();
 
 		this.animation = ["down", "out"];
@@ -1609,6 +1611,11 @@ class Game {
 		this.score += count;
 	}
 
+	onLevelCompleted() {
+		if (this.lost) return;
+		this.level_linear++;
+	}
+
 	addToken() {
 		// Don't let tokens go above zero again.
 		if (this.tokens <= 0 || this.tokens >= this.max_tokens) return;
@@ -1663,7 +1670,6 @@ class Game {
 		if (this.lost) {
 			for (const board of this.board_slots) {
 				if (!board) continue;
-				if (board.animation_time < 2.0) continue;
 				board.onLost();
 			}
 		}
@@ -1697,7 +1703,6 @@ class Game {
 
 			if (board.game_over_time > 1) {
 				this.level += 1 / this.desired_slots();
-				this.level_linear++;
 
 				// FINAL MAXIMUM SCORE
 				if (this.level >= 16.4) {
@@ -1711,9 +1716,7 @@ class Game {
 
 				// Play the same animation as the board we just replaced.
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
-				board = this.board_slots[i];
 			}
-
 		}
 		
 		let desired_slots = this.desired_slots();
