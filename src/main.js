@@ -1416,7 +1416,8 @@ function draw() {
 let previous_frame = performance.now();
 
 function tick(time) {
-	const delta = (time - previous_frame) / 1000;
+	let delta = (time - previous_frame) / 1000;
+	if (delta > (1 / 30)) delta = (1 / 30);
 	previous_frame = time;
 
 	cursor = "default";
