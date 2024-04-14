@@ -80,6 +80,16 @@ class BoardEntity {
 
 		ctx.restore();
 	}
+
+	playSound(sound, gain) {
+		let distance = this.pos[0] - (width / 2);
+
+		let pan = Math.max(-1, Math.min(1, distance / 600));
+		gain /= Math.hypot(1, distance / 800);
+
+		sound.play(gain, pan);
+
+	}
 }
 
 // extends entity haha this is fine :sunglasses:
@@ -330,6 +340,8 @@ class ShockwaveTurret extends Turret {
 			}
 
 			this.board.effects.push(new ShockEffect(this.board, this.relativePos, 1.6));
+
+			this.playSound(this.proto.sound, 1.0);
 		}
 	}
 
@@ -374,6 +386,8 @@ const buildables = {
 		cls: ShockwaveTurret,
 
 		rotatable: false,
+
+		sound: sound.load("sounds/shockwave.mp3"),
 	},
 };
 

@@ -44,6 +44,42 @@ class PlayingMusic {
 	}
 }
 
+class Sound {
+	constructor(path) {
+		// This is an `AudioBuffer`
+		this.buffer = null;
+
+		this.load(path);
+	}
+
+	async load(path) {
+		const bytes = await fetch(path).then(res => res.arrayBuffer());
+		const buffer = await context.decodeAudioData(bytes);
+
+		this.buffer = buffer;
+	}
+
+	play(gain, pan) {
+		if (!this.buffer) return;
+		if (!enabled) return;
+
+		const source = context.createBufferSource();
+		source.buffer = this.buffer;
+
+		source.start();
+
+		const gain_node = context.createGain();
+		gain_node.gain.value = gain;
+		source.connect(gain_node);
+
+		const pan_node = context.createStereoPanner();
+		pan_node.pan.value = pan;
+		gain_node.connect(pan_node);
+
+		pan_node.connect(all_effects_gain);
+	}
+}
+
 let music = null;
 
 let enabled = false;
@@ -74,6 +110,10 @@ export function setMusicVolume(volume) {
 
 export function setEffectsVolume(volume) {
 	setGlobalGainNodeVolume(all_effects_gain, volume);
+}
+
+export function load(path) {
+	return new Sound(path);
 }
 
 export function playSound(path) {
