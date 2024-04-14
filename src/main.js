@@ -279,7 +279,7 @@ class RepeaterTurret extends Turret {
 	update(delta) {
 		super.update(delta);
 		if (this.refire < 0) {
-			this.refire += 0.8;
+			this.refire += 0.4;
 			if (this.refire < 0) this.refire = 0;
 
 			const angle = this.rotation * Math.PI * 0.5;
@@ -305,7 +305,7 @@ class ShockwaveTurret extends Turret {
 
 		this.refire = 2.0;
 
-		this.refire_time = 2.5;
+		this.refire_time = 2.0;
 
 		this.health = 4;
 		this.maxHealth = 4;
