@@ -506,7 +506,7 @@ class GunnerBullet extends Bullet {
 	constructor(board, relativePos, angle) {
 		super(board, relativePos, angle, 8.0);
 
-		this.damage = 0.1;
+		this.damage = 0.15;
 	}
 
 	canTarget(ent) {
@@ -1342,8 +1342,8 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 5),
-			new PaletteEntry("shockwave", 8),
+			new PaletteEntry("repeater", 6),
+			new PaletteEntry("shockwave", 4),
 		];
 
 		this.pos = [0, 0];
