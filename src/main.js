@@ -804,7 +804,7 @@ class Board {
 		const enemies = [EnemyNoop, EnemyGunner];
 
 		for (let i = 0; i < waves; i++) {
-			const count = Math.random() * (1 + this.game.level * 0.3) + 1;
+			const count = Math.random() * (1 + this.game.level * 0.2) + 1;
 			const cls = enemies[Math.floor(Math.random() * enemies.length)];
 			for (let i = 0; i < count; i++) {
 				this.enemies_to_spawn.push({
@@ -1610,7 +1610,7 @@ class Game {
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
 
-				this.level += 0.5;
+				this.level++;
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
@@ -1619,7 +1619,16 @@ class Game {
 			i++;
 		}
 		
-		const desired_slots = Math.floor(Math.min(this.level + 1, 4));
+		let desired_slots = 1;
+		if (this.level > 3) {
+			desired_slots++;
+		}
+		if (this.level > 8) {
+			desired_slots++;
+		}
+		if (this.level > 20) {
+			desired_slots++;
+		}
 		if (this.board_slots.length < desired_slots) {
 			this.board_slots.push(new Board(this, ["down", "in"], 0));
 		}
