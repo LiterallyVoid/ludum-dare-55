@@ -488,7 +488,7 @@ class GunnerBullet extends Bullet {
 	constructor(board, relativePos, angle) {
 		super(board, relativePos, angle, 8.0);
 
-		this.damage = 0.15;
+		this.damage = 0.1;
 	}
 
 	canTarget(ent) {
@@ -667,10 +667,26 @@ class Board {
 		this.enemies_to_spawn = [];
 		this.enemy_spawn_timer = 0;
 
-		this.enemies_to_spawn.push({
-			ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
-			time: 0,
-		});
+		let spawn_time = 0;
+
+		const waves = Math.random() * 3 + 2;
+
+		const enemies = [EnemyNoop, EnemyGunner];
+
+		for (let i = 0; i < waves; i++) {
+			const count = Math.random() * 3 + 1;
+			const cls = enemies[Math.floor(Math.random() * enemies.length)];
+			for (let i = 0; i < count; i++) {
+				this.enemies_to_spawn.push({
+					ent: new cls(this, [...this.enemyTrack[0]]),
+					time: spawn_time,
+				});
+
+				spawn_time += 0.3;
+			}
+
+			spawn_time += 3;
+		}
 		// for (let i = 0; i < 6; i++) {
 		// 	this.enemies_to_spawn.push({
 		// 		ent: new EnemyGunner(this, [...this.enemyTrack[0]]),
