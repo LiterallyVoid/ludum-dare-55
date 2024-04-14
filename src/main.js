@@ -538,7 +538,7 @@ class Enemy extends BoardEntity {
 			movement_this_frame = pending;
 			this.next_waypoint_index++;
 
-			if (this.next_waypoint_index >= 2) {
+			if (this.next_waypoint_index == 2) {
 				this.health = this.maxHealth;
 			}
 		}
