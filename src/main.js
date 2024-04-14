@@ -488,7 +488,7 @@ class GunnerBullet extends Bullet {
 	constructor(board, relativePos, angle) {
 		super(board, relativePos, angle, 8.0);
 
-		this.damage = 0.05;
+		this.damage = 0.15;
 	}
 
 	canTarget(ent) {
