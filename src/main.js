@@ -1339,6 +1339,11 @@ class Game {
 		this.score = 0;
 	}
 
+	addScore(count) {
+		if (this.tokens <= 0) return;
+		this.score += count;
+	}
+
 	addToken() {
 		// Don't let tokens go above zero again.
 		if (this.tokens <= 0 || this.tokens >= this.max_tokens) return;
@@ -1409,6 +1414,7 @@ class Game {
 			if (event instanceof EventKeyDown) {
 				if (event.key === "F2") this.addToken();
 				if (event.key === "F3") this.removeToken();
+				if (event.key === "F4") this.addScore(50823);
 			}
 
 			if (event instanceof EventMouseMove) {
