@@ -303,6 +303,7 @@ class Board {
 		this.cell_size = 64;
 
 		this.entities = [];
+		this.effects = [];
 
 		this.enemyTrack = [];
 
@@ -376,6 +377,16 @@ class Board {
 					if (cell.entity === ent) cell.entity = null;
 				}
 				this.entities.splice(i, 1);
+				i--;
+				continue;
+			}
+		}
+
+		for (let i = 0; i < this.effects.length; i++) {
+			this.effects[i].update(delta);
+
+			if (this.effects[i].dead) {
+				this.effects.splice(i, 1);
 				i--;
 				continue;
 			}
@@ -495,6 +506,11 @@ class Board {
 		}
 
 		ctx.restore();
+
+		// Outside of clip.
+		for (const effect of this.effects) {
+			effect.draw();
+		}
 	}
 }
 
