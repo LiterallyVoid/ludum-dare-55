@@ -145,7 +145,9 @@ class ShockEffect extends BoardEntity {
 }
 
 class BuildableReturnEffect {
-	constructor(pos, angle, name, time, paletteEntry) {
+	constructor(board, pos, angle, name, time, paletteEntry) {
+		this.board = board;
+		pos = [pos[0] - board.pos[0], pos[1] - board.pos[1]];
 		this.pos = pos;
 		this.proto = buildables[name];
 		this.time = time;
@@ -169,8 +171,8 @@ class BuildableReturnEffect {
 
 		if (this.time > 0) {
 			const dest_pos = [
-				this.paletteEntry.pos[0],
-				this.paletteEntry.pos[1] - 40,
+				this.paletteEntry.pos[0] - this.board.pos[0],
+				this.paletteEntry.pos[1] - 40 - this.board.pos[1],
 			];
 			this.posSmooth.tick(delta, dest_pos, 70.0, 15.0);
 			this.angleSmooth.tick(delta, 0, 70.0, 15.0);
@@ -178,6 +180,8 @@ class BuildableReturnEffect {
 	}
 
 	draw() {
+		ctx.save();
+		ctx.translate(...this.board.pos);
 		if (this.time > 0) {
 			const frac = this.time / 0.5;
 			const radfrac = 1.0 - Math.pow(1.0 - frac, 6.0);
@@ -195,7 +199,6 @@ class BuildableReturnEffect {
 			ctx.fill();
 		}
 
-		ctx.save();
 		ctx.globalAlpha = Math.max(0, Math.min(1, 1.0 - (this.time / 0.5)));
 		drawImage(this.proto.image, [0.5, 0.5], this.posSmooth, this.angleSmooth);
 		drawImage(this.proto.image_barrel, [0.5, 0.5], this.posSmooth, this.angleSmooth);
@@ -239,7 +242,7 @@ class BannerEffect {
 
 class Turret extends BoardEntity {
 	constructor(board, proto, relativePos, rotation) {
-		super(board, relativePos, 0.5);
+		super(board, relativePos, 0.3);
 
 		this.proto = proto;
 		this.rotation = rotation;
@@ -486,6 +489,8 @@ class Enemy extends BoardEntity {
 	}
 
 	onDamage(amount) {
+		// Enemies are invincible until they are a respectable distance out.
+		if (this.next_waypoint_index < 2) return;
 		super.onDamage(amount);
 
 		this.playSound(global_sounds.enemy_hitsound, 1.0);
@@ -570,8 +575,8 @@ class EnemyNoop extends Enemy {
 
 		this.speed = 1.2;
 
-		this.health = 1;
-		this.maxHealth = 1;
+		this.health = 3;
+		this.maxHealth = 3;
 
 		this.flavor_spawn = [
 			"ive been summoned by the WIZARD and i will DO NOTHING.",
@@ -794,7 +799,7 @@ class Board {
 
 		let spawn_time = 3 - animation_time;
 
-		const waves = 1; // Math.random() * 3 + 2;
+		const waves = Math.random() * (3 + this.game.level * 0.5) + 2;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
@@ -933,16 +938,16 @@ class Board {
 		global_sounds.jingle_arena_win.play(1, 0);
 		this.effects.push(new BannerEffect(this, "ARENA CLEARED!"));
 
-		let time = -0.1;
+		let time = -0.5;
 		for (const entity of this.entities) {
 			if (!(entity instanceof Turret)) continue;
 
 			const palette_entry = this.game.palette.stock(entity.proto.key);
 
-			this.game.effects.push(new BuildableReturnEffect(entity.pos, entity.rotation * Math.PI * 0.5, entity.proto.key, time, palette_entry));
+			this.game.effects.push(new BuildableReturnEffect(this, entity.pos, entity.rotation * Math.PI * 0.5, entity.proto.key, time, palette_entry));
 
 			entity.dead = true;
-			time -= 0.1;
+			time -= 0.2;
 		}
 
 		this.game.addToken();
@@ -1520,9 +1525,6 @@ class Game {
 	constructor() {
 		this.palette = new Palette();
 		this.board_slots = [
-			new Board(this, ["down", "in"], 0),
-			new Board(this, ["up", "in"], -0.3),
-			new Board(this, ["down", "in"], -0.6),
 		];
 		this.boards_pan = new Smooth(0);
 		this.panning = false;
@@ -1543,6 +1545,11 @@ class Game {
 		this.score = 0;
 
 		this.effects = [];
+
+		this.level = 0;
+
+		this.board_slots.push(new Board(this, ["down", "in"], 0));
+
 	}
 
 	addScore(count) {
@@ -1602,12 +1609,19 @@ class Game {
 				// Play the same animation as the board we just replaced.
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
+
+				this.level += 0.25;
 			}
 
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
 			board.update(delta);
 
 			i++;
+		}
+		
+		const desired_slots = Math.floor(Math.min(this.level + 1, 4));
+		if (this.board_slots.length < desired_slots) {
+			this.board_slots.push(new Board(this, ["down", "in"], 0));
 		}
 
 		poll(this, (event) => {
