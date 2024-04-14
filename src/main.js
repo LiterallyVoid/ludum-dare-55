@@ -755,6 +755,8 @@ class Board {
 					entity.dead = true;
 				}
 			}
+
+			this.game.addToken();
 		}
 
 		if (this.game_over) {
@@ -766,6 +768,8 @@ class Board {
 		if (this.game_over) return;
 		this.game_over = true;
 		this.effects.push(new BannerEffect(this, "LOST"));
+
+		this.game.removeToken();
 	}
 
 	cell(pos) {
@@ -1304,6 +1308,35 @@ class Game {
 		this.panning = false;
 
 		this.hover = false;
+
+		this.tokens = 4;
+		this.max_tokens = 4;
+
+		this.token_timers = [];
+		for (let i = 0; i < this.max_tokens; i++) {
+			this.token_timers.push({sign: 1, time: 99});
+		}
+	}
+
+	addToken() {
+		// Don't let tokens go above zero again.
+		if (this.tokens <= 0 || this.tokens >= this.max_tokens) return;
+
+		this.tokens++;
+		this.token_timers[this.tokens] = {
+			sign: 1,
+			time: 0,
+		};
+	}
+
+	removeToken() {
+		if (this.tokens <= 0) return;
+
+		this.tokens--;
+		this.token_timers[this.tokens] = {
+			sign: -1,
+			time: 0,
+		};
 	}
 
 	// `update` things in the opposite order from drawing them, so the events of things drawn higher in Z-order (later in `draw`) are processed first (earlier in `update`)
@@ -1395,6 +1428,17 @@ class Game {
 		}
 
 		this.palette.draw();
+
+		ctx.save();
+		ctx.translate(width, 0);
+
+		ctx.textAlign = "right";
+		ctx.textBaseline = "top";
+
+		ctx.font = "20px sans";
+		ctx.fillStyle = "#FFF";
+		ctx.fillText(`${this.tokens}/${this.max_tokens}`, -5, 5);
+		ctx.restore();
 	}
 }
 
