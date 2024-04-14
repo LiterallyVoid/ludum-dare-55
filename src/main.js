@@ -1184,6 +1184,8 @@ class Game {
 		this.palette.update(delta);
 
 		const board_width = 6 * 64;
+		const board_height = 64 * 6;
+
 		const board_spacing = board_width + 100;
 
 		const max_pan = board_spacing * (this.board_slots.length - 1);
@@ -1206,8 +1208,6 @@ class Game {
 			i++;
 		}
 
-		const boardHeight = 64 * 6;
-
 		poll(this, (event) => {
 			if ((this.panning || captured(this)) && (event === event_blur || !captured(this) || !this.panning)) {
 				releaseCapture();
@@ -1221,8 +1221,8 @@ class Game {
 					this.boards_pan.velocity = -event.relative[0] / delta;
 				}
 
-				if (event.pos[1] > (height - boardHeight) / 2 &&
-				event.pos[1] < (height + boardHeight) / 2) {
+				if (event.pos[1] > (height - board_height) / 2 &&
+				event.pos[1] < (height + board_height) / 2) {
 					this.hover = true;
 
 					return event_blur;
@@ -1327,4 +1327,8 @@ window.addEventListener("mousewheel", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventMouseWheel([e.deltaX, e.deltaY]));
+});
+
+canvas.addEventListener("mouseout", () => {
+	events.push(event_blur);
 });
