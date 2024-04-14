@@ -354,6 +354,26 @@ class Enemy extends BoardEntity {
 		this.relativePos[0] += vec[0] * movement_this_frame;
 		this.relativePos[1] += vec[1] * movement_this_frame;
 	}
+
+	chooseTarget(radius) {
+		let min_dist = 0;
+		let min_ent = null;
+		for (const ent of this.board.entitiesNear(this.relativePos, radius)) {
+			if (!(ent instanceof Turret)) continue;
+
+			const dist = Math.hypot(
+				ent.relativePos[0] - this.relativePos[0],
+				ent.relativePos[1] - this.relativePos[1],
+			);
+
+			if (dist < min_dist || !min_ent) {
+				min_dist = dist;
+				min_ent = ent;
+			}
+		}
+
+		return min_ent;
+	}
 }
 
 class EnemyNoop extends Enemy {
@@ -406,22 +426,41 @@ class EnemyGunner extends Enemy {
 			"No...",
 		];
 
-		this.angle = new Smooth(0);
+		this.angle_smooth = new Smooth(0);
 	}
 
 	update(delta) {
 		super.update(delta);
+
+		const target = this.chooseTarget(3);
+
+		if (target) {
+			const angle = Math.atan2(
+				target.relativePos[1] - this.relativePos[1],
+				target.relativePos[0] - this.relativePos[0],
+			);
+			this.angle_smooth.tick(delta, angle, 100.0, 25.0);
+		} else {
+			this.angle_smooth.tick(delta, this.angle_forwards, 100.0, 25.0);
+		}
 	}
 
 	draw() {
 		ctx.save();
 		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.rotate(this.angle_smooth);
 		ctx.beginPath();
-		ctx.arc(0, 0, 15, 0, Math.PI * 2);
 
-		ctx.strokeStyle = "#F93";
-		ctx.lineWidth = 5;
-		ctx.stroke();
+		ctx.moveTo(15, 0);
+		ctx.lineTo(-5, 8);
+		ctx.lineTo(-2, 0);
+		ctx.lineTo(-5, -8);
+
+		ctx.closePath();
+		
+		ctx.fillStyle = "#FD6";
+		ctx.lineWidth = 2;
+		ctx.fill();
 		ctx.restore();
 	}
 }
