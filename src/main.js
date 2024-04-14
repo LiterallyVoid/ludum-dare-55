@@ -382,7 +382,7 @@ class Enemy extends BoardEntity {
 	constructor(board, relativePos, radius) {
 		super(board, relativePos, radius);
 
-		this.speed = 1;
+		this.speed = 2;
 
 		this.next_waypoint_index = 1;
 
@@ -454,6 +454,8 @@ class EnemyNoop extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.3);
 
+		this.speed = 2;
+
 		this.health = 1;
 		this.maxHealth = 1;
 
@@ -513,7 +515,7 @@ class EnemyGunner extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.4);
 
-		this.speed = 0.7;
+		this.speed = 1.5;
 
 		this.health = 2;
 		this.maxHealth = 2;
@@ -1325,18 +1327,19 @@ class Game {
 	}
 
 		let i = 0;
-		for (const board of this.board_slots) {
+		for (let board of this.board_slots) {
 			if (!board) {
 				i++;
 				continue;
 			}
 
+			if (board.game_over_time > 1) {
+				this.board_slots[i] = new Board(this);
+				board = this.board_slots[i];
+			}
+
 			board.pos = [width / 2 + board_spacing * i - this.boards_pan, height / 2];
 			board.update(delta);
-
-			if (board.game_over_time > 1) {
-				this.board_slots[i] = null;
-			}
 
 			i++;
 		}
