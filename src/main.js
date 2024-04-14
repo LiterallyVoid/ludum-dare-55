@@ -306,12 +306,12 @@ class BoardPopupEffect {
 		ctx.save();
 		ctx.fillStyle = "#5CF";
 
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i < 7; i++) {
 			const frac = (this.time - i * 0.3) / 0.5;
 			if (frac < 0 || frac > 1) continue;
 
-			const x = (1.0 - Math.pow(1 - frac, 3)) * 200;
-			const w = (1 - Math.pow(frac, 2)) * 40;
+			const x = (1.0 - Math.pow(1 - frac, 3)) * 600;
+			const w = (1 - Math.pow(frac, 2)) * 80;
 
 			ctx.fillRect(width - x - w * 0.5, 0, w, height);
 		}
