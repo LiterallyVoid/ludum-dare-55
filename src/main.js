@@ -240,7 +240,7 @@ class ShockwaveTurret extends Turret {
 			for (const ent of this.board.entitiesNear(this.relativePos, 1.6)) {
 				if (ent === this) continue;
 				if (ent.health) {
-					ent.health -= 2;
+					ent.health -= 0.8;
 				}
 			}
 
