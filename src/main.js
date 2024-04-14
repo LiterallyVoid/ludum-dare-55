@@ -687,6 +687,7 @@ class Board {
 		this.enemies_to_spawn.sort((a, b) => b.time - a.time);
 
 		this.game_over = false;
+		this.game_over_time = 0;
 	}
 
 	spawn(ent) {
@@ -752,6 +753,10 @@ class Board {
 					entity.dead = true;
 				}
 			}
+		}
+
+		if (this.game_over) {
+			this.game_over_time += delta / 4;
 		}
 	}
 
