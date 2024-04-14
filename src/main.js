@@ -692,7 +692,7 @@ class Board {
 
 		let spawn_time = 3 - animation_time;
 
-		const waves = Math.random() * 2 + 1;
+		const waves = Math.random() * 3 + 2;
 
 		const enemies = [EnemyNoop, EnemyGunner];
 
