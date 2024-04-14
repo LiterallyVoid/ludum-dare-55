@@ -4,9 +4,10 @@ MUSIC_FILES = $(MUSIC_SOURCES:%.mmpz=%.mp3)
 SOUND_SOURCES = \
 	sounds/shockwave.mmpz \
 	sounds/repeater.mmpz \
-	sounds/turret-die.mmpz \
 	sounds/enemy-hitsound.mmpz \
+	sounds/enemy-die.mmpz \
 	sounds/turret-hitsound.mmpz \
+	sounds/turret-die.mmpz \
 	sounds/jingle-arena-lose.mmpz \
 	sounds/jingle-arena-win.mmpz \
 

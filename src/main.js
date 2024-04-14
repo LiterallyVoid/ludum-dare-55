@@ -548,6 +548,8 @@ class ShockwaveTurret extends Turret {
 const global_sounds = {
 	enemy_hitsound: sound.load("sounds/enemy-hitsound.mp3"),
 	turret_hitsound: sound.load("sounds/turret-hitsound.mp3"),
+	enemy_die: sound.load("sounds/enemy-die.mp3"),
+
 
 	jingle_arena_win: sound.load("sounds/jingle-arena-win.mp3"),
 	jingle_arena_lose: sound.load("sounds/jingle-arena-lose.mp3"),
@@ -638,6 +640,8 @@ class Enemy extends BoardEntity {
 
 		if (this.health <= 0) {
 			this.dead = true;
+			this.playSound(global_sounds.enemy_die, 1.0);
+
 			if (Math.random() < 0.3) this.createFlavor(this.flavor_die);
 		}
 	}
