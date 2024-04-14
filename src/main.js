@@ -244,14 +244,27 @@ const buildables = {
 	},
 };
 
-class EnemyBat extends BoardEntity {
+class Enemy extends BoardEntity {
+	constructor(board, relativePos, radius) {
+		super(board, relativePos, radius);
+
+		this.speed = 1;
+
+		this.waypoint_index = 0;
+	}
+
+	update(delta) {
+		super.update(delta);
+	}
+}
+
+class EnemyBat extends Enemy {
 	constructor(board, relativePos) {
 		super(board, relativePos, 0.4);
 
-		this.velocity = [0, 0];
-
 		this.health = 2;
 		this.maxHealth = 2;
+
 	}
 
 	update(delta) {
