@@ -302,6 +302,7 @@ class RepeaterTurret extends Turret {
 
 			this.punch.velocity = -5.0;
 
+			this.playSound(this.proto.sound, 1.0);
 		}
 
 		this.punch.tick(delta, 0, 100.0, 18.0);
@@ -376,6 +377,8 @@ const buildables = {
 		cls: RepeaterTurret,
 
 		rotatable: true,
+
+		sound: sound.load("sounds/repeater.mp3"),
 	},
 	shockwave: {
 		name: "Shockwave Turret",
