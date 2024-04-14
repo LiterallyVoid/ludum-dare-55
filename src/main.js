@@ -611,13 +611,16 @@ class GridCell {
 }
 
 class Board {
-	constructor(game) {
+	constructor(game, animation, animation_time) {
 		this.pos = [0, 0];
 		this.game = game;
 
 		this.width = 6;
 		this.height = 8;
 		this.grid = [];
+
+		this.animation = animation;
+		this.animation_time = animation_time;
 
 		for (let x = 0; x < this.width; x++) {
 			this.grid.push([]);
@@ -687,7 +690,7 @@ class Board {
 		this.enemies_to_spawn = [];
 		this.enemy_spawn_timer = 0;
 
-		let spawn_time = 0;
+		let spawn_time = 3 - animation_time;
 
 		const waves = Math.random() * 2 + 1;
 
@@ -728,6 +731,9 @@ class Board {
 		this.game_over_time = 0;
 
 		this.background_image = img("assets/board.svg");
+
+		// Set from `update`, used from `draw`.
+		this.fade = 0;
 	}
 
 	spawn(ent) {
@@ -739,6 +745,34 @@ class Board {
 	}
 
 	update(delta) {
+		const fade_time = 1;
+
+		if (this.animation_time < fade_time) {
+			let fraction = Math.max(0, Math.min(1, this.animation_time / fade_time));
+			if (this.animation[1] === "out") {
+				fraction = 1 - fraction;
+			}
+			let offset = Math.pow(1.0 - fraction, 2) * 300;
+			this.fade = fraction;
+
+			let sign;
+			if (this.animation[0] === "up") {
+				sign = -1;
+			} else {
+				sign = 1;
+			}
+
+			if (this.animation[1] === "out") {
+				sign *= -1;
+			}
+
+			this.pos[1] += offset * sign;
+
+			this.animation_time += delta;
+		} else {
+			this.fade = 1;
+		}
+
 		// Important to do this first, as otherwise if there's a single enemy, there's a one frame gap between it spawning -> it registering on the `has_enemies` scale.
 		const last_enemy = () => this.enemies_to_spawn[this.enemies_to_spawn.length - 1];
 
@@ -795,11 +829,15 @@ class Board {
 			}
 
 			this.game.addToken();
+
+			this.animation = ["up", "out"];
+			this.animation_time = -3;
 		}
 
 		if (this.game_over) {
 			this.game_over_time += delta / 4;
 		}
+
 	}
 
 	onLost() {
@@ -808,6 +846,9 @@ class Board {
 		this.effects.push(new BannerEffect(this, "LOST"));
 
 		this.game.removeToken();
+
+		this.animation = ["down", "out"];
+		this.animation_time = -3;
 	}
 
 	cell(pos) {
@@ -929,6 +970,17 @@ class Board {
 
 		for (const effect of this.effects) {
 			effect.draw();
+		}
+
+		if (this.fade < 1) {
+			const margin = 10;
+			ctx.fillStyle = `rgba(0, 0, 0, ${(1.0 - this.fade) * 100}%)`;
+			ctx.fillRect(
+				this.pos[0] - this.width * this.cell_size * 0.5 - margin,
+				this.pos[1] - this.height * this.cell_size * 0.5 - margin,
+				this.width * this.cell_size + margin * 2,
+				this.height * this.cell_size + margin * 2,
+			);
 		}
 	}
 }
@@ -1338,9 +1390,9 @@ class Game {
 	constructor() {
 		this.palette = new Palette();
 		this.board_slots = [
-			new Board(this),
-			new Board(this),
-			new Board(this),
+			new Board(this, ["down", "in"], 0),
+			new Board(this, ["up", "in"], -0.3),
+			new Board(this, ["down", "in"], -0.6),
 		];
 		this.boards_pan = new Smooth(0);
 		this.panning = false;
@@ -1415,7 +1467,8 @@ class Game {
 			}
 
 			if (board.game_over_time > 1) {
-				this.board_slots[i] = new Board(this);
+				// Play the same animation as the board we just replaced.
+				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
 			}
 
@@ -1437,6 +1490,7 @@ class Game {
 				if (event.key === "F2") this.addToken();
 				if (event.key === "F3") this.removeToken();
 				if (event.key === "F4") this.addScore(50823);
+				if (event.key === "F5") this.board_slots[0].onLost();
 			}
 
 			if (event instanceof EventMouseMove) {
