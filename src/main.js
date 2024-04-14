@@ -1663,7 +1663,7 @@ class Game {
 
 			for (const board of this.board_slots) {
 				if (!board) continue;
-				if (board.has_turrets) this.lost = false;
+				if (board.has_turrets && !board.game_over_lost) this.lost = false;
 			}
 		}
 
@@ -1720,7 +1720,7 @@ class Game {
 		}
 		
 		let desired_slots = this.desired_slots();
-		if (this.board_slots.length < desired_slots) {
+		if (!this.lost && this.board_slots.length < desired_slots) {
 			this.board_slots.push(new Board(this, ["up", "in"], 0));
 			this.effects.push(new BoardPopupEffect());
 		}
