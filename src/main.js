@@ -1619,11 +1619,17 @@ class Game {
 			}
 
 			if (board.game_over_time > 1) {
+				this.level += 1 / this.board_slots.length;
+
+				// FINAL MAXIMUM SCORE
+				if (this.level >= 15) {
+					this.board_slots[i] = null;
+					continue;
+				}
+
 				// Play the same animation as the board we just replaced.
 				this.board_slots[i] = new Board(this, [board.animation[0], "in"], 0);
 				board = this.board_slots[i];
-
-				this.level += 1 / this.board_slots.length;
 
 				if (!board.game_over_lost) {
 					this.addScore(1);
