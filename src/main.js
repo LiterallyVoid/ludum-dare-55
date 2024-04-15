@@ -1127,7 +1127,7 @@ class EnemyGunner extends Enemy {
 const spawnables = [
 	{
 		cls: EnemyNoop,
-		separation: 0.4,
+		separation: 0.3,
 
 		group_size: 2.0,
 	},
