@@ -416,7 +416,7 @@ class BannerEffect {
 
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.font = `Bold 30px sans`;
+		ctx.font = `Bold 30px sans-serif`;
 		ctx.fillStyle = "#FFF";
 
 		ctx.fillText(this.text, 0, 0);
@@ -795,13 +795,14 @@ class FlavorEffect extends BoardEntity {
 
 	update(delta) {
 		super.update(delta);
-		this.time += delta / 3;
+		this.time += delta / 8;
 		if (this.time > 1) this.dead = true;
+		this.relativePos[1] -= delta / 10;
 	}
 
 	draw() {
 		ctx.save();
-		ctx.font = "9px sans";
+		ctx.font = "9px sans-serif";
 		ctx.fillStyle = "#FFF";
 		ctx.globalAlpha = 1 - this.time;
 		ctx.textAlign = "center";
@@ -1895,7 +1896,7 @@ class PaletteEntry {
 
 		const count_size = 20 + (1.0 - Math.pow(1.0 - this.count_pop, 2.0)) * 60;
 
-		ctx.font = `Bold ${count_size}px sans`;
+		ctx.font = `Bold ${count_size}px sans-serif`;
 		ctx.fillText(this.count - (this.dragging ? 1 : 0), x, y - 80);
 
 		if (!this.dragging) {
@@ -2281,7 +2282,7 @@ class Game {
 		ctx.textAlign = "right";
 		ctx.textBaseline = "middle";
 
-		ctx.font = "Bold 30px sans";
+		ctx.font = "Bold 30px sans-serif";
 		ctx.fillStyle = "#FFF";
 
 		if (this.level_linear <= 50) {
@@ -2310,23 +2311,23 @@ class Game {
 			ctx.textBaseline = "bottom";
 			ctx.fillStyle = "#FFF";
 
-			ctx.font = "Bold 20px sans";
+			ctx.font = "Bold 20px sans-serif";
 
 			if (this.level_linear > 50) {
-				ctx.font = "Bold 50px sans";
+				ctx.font = "Bold 50px sans-serif";
 
 				ctx.fillText("You won!", 0, 0);
 			} else if (this.level_linear > 1) {
-				ctx.font = "Bold 30px sans";
+				ctx.font = "Bold 30px sans-serif";
 				ctx.fillText(`You survived to level ${this.level_linear - 1}, out of 50`, 0, 0);
 			} else {
-				ctx.font = "Bold 30px sans";
+				ctx.font = "Bold 30px sans-serif";
 				ctx.fillText("You suffered crushing defeat", 0, 0);
 			}
-			ctx.font = "20px sans";
+			ctx.font = "20px sans-serif";
 			ctx.fillText(`...and cleared ${this.score} levels on the way.`, 0, 40);
 
-			ctx.font = "15px sans";
+			ctx.font = "15px sans-serif";
 			ctx.fillText("Press ESC to open the menu.", 0, 90);
 
 			ctx.restore();
