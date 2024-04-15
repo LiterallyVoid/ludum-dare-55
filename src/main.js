@@ -2395,6 +2395,7 @@ window.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mousedown", (e) => {
 	events.push(new EventMouseDown(e.button));
 	e.preventDefault();
+	canvas.focus();
 }, { passive: false });
 
 canvas.addEventListener("mouseup", (e) => {
