@@ -944,7 +944,7 @@ class EnemyNoop extends Enemy {
 
 		this.speed = 1.2;
 
-		this.maxHealth = 1;
+		this.maxHealth = 2;
 
 		this.flavor_spawn = [
 			"What is this place?",
