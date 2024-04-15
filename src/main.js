@@ -700,7 +700,7 @@ class MortarTurret extends Turret {
 	update(delta) {
 		super.update(delta);
 		if (this.refire < 0) {
-			this.refire += 2.0;
+			this.refire += 2.5;
 			if (this.refire < 0) this.refire = 0;
 
 			const angle = this.rotation * Math.PI * 0.5;
