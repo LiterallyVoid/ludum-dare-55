@@ -695,6 +695,9 @@ class MortarTurret extends Turret {
 		super(board, proto, relativePos, rotation);
 
 		this.punch = new Smooth(0);
+
+		this.health = 1;
+		this.maxHealth = 1;
 	}
 
 	update(delta) {
