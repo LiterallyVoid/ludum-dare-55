@@ -1921,8 +1921,8 @@ class PaletteEntry {
 class Palette {
 	constructor() {
 		this.deck = [
-			new PaletteEntry("repeater", 3),
-			new PaletteEntry("shockwave", 3),
+			new PaletteEntry("repeater", 2),
+			new PaletteEntry("shockwave", 2),
 			new PaletteEntry("mortar", 2),
 		];
 
