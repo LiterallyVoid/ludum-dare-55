@@ -230,6 +230,77 @@ class TurretLossEffect extends BoardEntity {
 	}
 }
 
+class MortarExplosion extends BoardEntity {
+	constructor(board, relativePos) {
+		super(board, relativePos, 0);
+
+		this.time = 0;
+
+		this.sparkParticles = [
+		];
+
+		for (let i = 0; i < 4; i++) {
+			this.sparkParticles.push({
+				pos: [...this.relativePos, 0],
+				vel: [
+					(Math.random() * 2 - 1) * 3,
+					(Math.random() * 2 - 1) * 3,
+					Math.random() * 4,
+				],
+			});
+		}
+
+		this.time = 0;
+	}
+
+	update(delta) {
+		for (const part of this.sparkParticles) {
+			part.pos[0] += part.vel[0] * delta;
+			part.pos[1] += part.vel[1] * delta;
+			part.pos[2] += part.vel[2] * delta;
+
+			part.vel[2] -= delta * 8;
+			if (part.pos[2] < 0) {
+				part.vel[2] = Math.abs(part.vel[2]);
+				part.pos[2] = 0;
+
+				part.vel[0] *= 0.8;
+				part.vel[1] *= 0.8;
+			}
+		}
+		super.update(delta);
+
+		this.time += delta * 4;
+		if (this.time > 1) this.dead = true;
+	}
+
+	draw() {
+		const frac = this.time;
+		ctx.strokeStyle = "#48F";
+		ctx.lineWidth = 4 * (1 - frac);
+		ctx.lineCap = "round";
+		for (const spark of this.sparkParticles) {
+			let [x, y] = this.board.cellToGlobal(spark.pos);
+			y -= spark.pos[2] * 64;
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+
+			const len = 8 * (1 - frac);
+			ctx.lineTo(x + (spark.vel[0]) * len, y + (spark.vel[1] - spark.vel[2]) * len);
+
+			ctx.stroke();
+		}
+
+		ctx.beginPath();
+		ctx.arc(this.pos[0], this.pos[1], (1 - Math.pow(1 - frac, 2)) * 30, 0, Math.PI * 2);
+
+		ctx.fillStyle = "#48F";
+		ctx.globalAlpha = 1 - frac;
+		ctx.fill();
+		ctx.globalAlpha = 1;
+	}
+}
+
 class BuildableReturnEffect {
 	constructor(board, pos, angle, name, time, paletteEntry) {
 		this.board = board;
@@ -545,6 +616,103 @@ class ShockwaveTurret extends Turret {
 	}
 }
 
+
+class MortarBullet extends BoardEntity {
+	constructor(board, proto, controller, relativePos, angle) {
+		super(board, relativePos, angle, 4.0);
+
+		this.velocity = [
+			Math.sin(angle) * 4.0,
+			-Math.cos(angle) * 4.0,
+		];
+
+		const distance = 3;
+
+		this.time = distance / 4.0;
+		this.halftime = this.time / 2.0;
+
+		this.proto = proto;
+		this.controller = controller;
+
+		this.angle = angle;
+
+		this.damage = 1.5;
+	}
+
+	update(delta) {
+		this.relativePos[0] += this.velocity[0] * delta;
+		this.relativePos[1] += this.velocity[1] * delta;
+
+		super.update(delta);
+
+		this.time -= delta;
+
+		if (this.time <= 0) {
+			this.dead = true;
+
+			for (const entity of this.board.entitiesNear(this.relativePos, 0.5)) {
+				if (entity === this) continue;
+				if (entity.health) {
+					entity.onDamage(this.damage);
+					this.didDamage?.(entity);
+				}
+			}
+
+			this.board.effects.push(new MortarExplosion(this.board, [...this.relativePos]));
+		}
+	}
+
+	draw() {
+		const accel = 0.5;
+		let z = 1 - Math.pow(Math.abs(this.time - this.halftime) / this.halftime, 2);
+		z *= accel;
+
+		const zv = ((this.time - this.halftime) / this.halftime) * accel * 4;
+		
+		const pos = [
+			this.pos[0],
+			this.pos[1] - z * 64,
+		];
+
+		const angle = Math.atan2(
+			this.velocity[0],
+			-(this.velocity[1] - zv),
+		);
+		drawImage(this.proto.image_bullet, [0.5, 0.5], pos, angle);
+	}
+}
+
+class MortarTurret extends Turret {
+	constructor(board, proto, relativePos, rotation) {
+		super(board, proto, relativePos, rotation);
+
+		this.punch = new Smooth(0);
+	}
+
+	update(delta) {
+		super.update(delta);
+		if (this.refire < 0) {
+			this.refire += 2.0;
+			if (this.refire < 0) this.refire = 0;
+
+			const angle = this.rotation * Math.PI * 0.5;
+
+			this.board.spawn(new MortarBullet(this.board, this.proto, this, [...this.relativePos], angle));
+
+			this.punch.velocity = -5.0;
+
+			this.playSound(this.proto.sound, 1.0);
+		}
+
+		this.punch.tick(delta, 0, 100.0, 18.0);
+	}
+
+	draw() {
+		drawImage(this.proto.image, [0.5, 0.5], this.pos, this.rotation * Math.PI * 0.5);
+		drawImage(this.proto.image_barrel, [0.5, this.punch + 0.5], this.pos, this.rotation * Math.PI * 0.5);
+	}
+}
+
 const global_sounds = {
 	enemy_hitsound: sound.load("sounds/enemy-hitsound.mp3"),
 	turret_hitsound: sound.load("sounds/turret-hitsound.mp3"),
@@ -582,6 +750,21 @@ const buildables = {
 
 		sound: sound.load("sounds/shockwave.mp3"),
 		// hopefully browsers are good enough at caching this!
+		sound_die: sound.load("sounds/turret-die.mp3"),
+	},
+	mortar: {
+		name: "Mortar Turret",
+		hurtbox: img("assets/damagemortar.svg"),
+		hurtboxAnchor: [0.5, 3.5],
+		image: img("assets/turret-mortar.svg"),
+		image_barrel: img("assets/turret-mortar-barrel.svg"),
+		image_bullet: img("assets/mortar-bullet.svg"),
+		cls: MortarTurret,
+
+		rotatable: true,
+
+		sound: sound.load("sounds/mortar.mp3"),
+		sound_shell: sound.load("sounds/mortar-shell.mp3"),
 		sound_die: sound.load("sounds/turret-die.mp3"),
 	},
 };
@@ -793,8 +976,8 @@ class EnemyGrunt extends Enemy {
 		this.flavor_spawn = [
 			"WELCOME TO MY WORLD",
 			"I AM VERY LARGE",
-			"THE BATTLEFIELD SHAKES",
-			"So where are we going again?",
+			"THE BATTLEGROUND SHAKES",
+			"I AM THE ALL-CONSUMING FLAME",
 		];
 
 		this.flavor_die = [
@@ -812,9 +995,9 @@ class EnemyGrunt extends Enemy {
 		ctx.save();
 		ctx.translate(this.pos[0], this.pos[1]);
 		ctx.beginPath();
-		ctx.arc(0, 0, 20, 0, Math.PI * 2);
+		ctx.arc(0, 0, 17, 0, Math.PI * 2);
 
-		ctx.fillStyle = "#893";
+		ctx.fillStyle = "#8FA";
 		ctx.fill();
 		ctx.restore();
 	}
@@ -950,9 +1133,9 @@ const spawnables = [
 
 	{
 		cls: EnemyGrunt,
-		separation: 2,
+		separation: 1,
 
-		group_size: 0.5,
+		group_size: 0.4,
 	},
 ];
 
@@ -1732,6 +1915,7 @@ class Palette {
 		this.deck = [
 			new PaletteEntry("repeater", 3),
 			new PaletteEntry("shockwave", 3),
+			new PaletteEntry("mortar", 2),
 		];
 
 		this.pos = [0, 0];
