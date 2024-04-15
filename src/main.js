@@ -678,6 +678,12 @@ class MortarBullet extends BoardEntity {
 			this.velocity[0],
 			-(this.velocity[1] - zv),
 		);
+
+		ctx.fillStyle = "#0008";
+		ctx.beginPath();
+		ctx.arc(this.pos[0], this.pos[1], 15, 0, Math.PI * 2);
+		ctx.fill();
+
 		drawImage(this.proto.image_bullet, [0.5, 0.5], pos, angle);
 	}
 }
