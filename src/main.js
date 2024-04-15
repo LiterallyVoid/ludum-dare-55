@@ -750,7 +750,7 @@ class EnemyNoop extends Enemy {
 
 		this.speed = 1.2;
 
-		this.maxHealth = 3;
+		this.maxHealth = 1;
 
 		this.flavor_spawn = [
 			"What is this place?",
@@ -776,6 +776,45 @@ class EnemyNoop extends Enemy {
 		ctx.arc(0, 0, 10, 0, Math.PI * 2);
 
 		ctx.fillStyle = "#28A";
+		ctx.fill();
+		ctx.restore();
+	}
+}
+
+
+class EnemyGrunt extends Enemy {
+	constructor(board, relativePos) {
+		super(board, relativePos, 0.5);
+
+		this.speed = 0.4;
+
+		this.maxHealth = 5;
+
+		this.flavor_spawn = [
+			"WELCOME TO MY WORLD",
+			"I AM VERY LARGE",
+			"THE BATTLEFIELD SHAKES",
+			"So where are we going again?",
+		];
+
+		this.flavor_die = [
+			"SEE YA LATER!",
+			"GOODBYE!",
+			"I HOPE YOU HAVE A WONDERFUL DAY.",
+		];
+	}
+
+	update(delta) {
+		super.update(delta);
+	}
+
+	draw() {
+		ctx.save();
+		ctx.translate(this.pos[0], this.pos[1]);
+		ctx.beginPath();
+		ctx.arc(0, 0, 20, 0, Math.PI * 2);
+
+		ctx.fillStyle = "#893";
 		ctx.fill();
 		ctx.restore();
 	}
@@ -894,6 +933,29 @@ class EnemyGunner extends Enemy {
 	}
 }
 
+const spawnables = [
+	{
+		cls: EnemyNoop,
+		separation: 0.4,
+
+		group_size: 2.0,
+	},
+
+	{
+		cls: EnemyGunner,
+		separation: 0.5,
+
+		group_size: 1.0,
+	},
+
+	{
+		cls: EnemyGrunt,
+		separation: 2,
+
+		group_size: 0.5,
+	},
+];
+
 class GridCell {
 	constructor() {
 		// Flyweighted to `cellTypes`
@@ -998,18 +1060,17 @@ class Board {
 
 		const waves = Math.random() * (2 + this.game.level * 0.05) + 3;
 
-		const enemies = [EnemyNoop, EnemyGunner];
-
 		for (let i = 0; i < waves; i++) {
-			const count = Math.random() * (1 + this.game.level * 0.1) + 1;
-			const cls = enemies[Math.floor(Math.random() * enemies.length)];
+			const spawnable = spawnables[Math.floor(Math.random() * spawnables.length)];
+			let count = Math.random() * (1 + this.game.level * 0.1) + 1.5;
+			count *= spawnable.group_size;
 			for (let i = 0; i < count; i++) {
 				this.enemies_to_spawn.push({
-					ent: new cls(this, [...this.enemyTrack[0]]),
+					ent: new spawnable.cls(this, [...this.enemyTrack[0]]),
 					time: spawn_time,
 				});
 
-				spawn_time += 0.5;
+				spawn_time += spawnable.separation;
 			}
 
 			spawn_time += 3;
