@@ -4,6 +4,8 @@ MUSIC_FILES = $(MUSIC_SOURCES:%.mmpz=%.mp3)
 SOUND_SOURCES = \
 	sounds/shockwave.mmpz \
 	sounds/repeater.mmpz \
+	sounds/mortar.mmpz \
+	sounds/mortar-shell.mmpz \
 	sounds/enemy-hitsound.mmpz \
 	sounds/enemy-die.mmpz \
 	sounds/turret-hitsound.mmpz \

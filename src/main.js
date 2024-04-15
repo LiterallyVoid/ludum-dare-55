@@ -659,6 +659,8 @@ class MortarBullet extends BoardEntity {
 			}
 
 			this.board.effects.push(new MortarExplosion(this.board, [...this.relativePos]));
+
+			this.playSound(this.proto.sound_shell, 1.0);
 		}
 	}
 
