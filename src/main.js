@@ -2394,10 +2394,13 @@ window.addEventListener("mousemove", (e) => {
 
 canvas.addEventListener("mousedown", (e) => {
 	events.push(new EventMouseDown(e.button));
-});
+	e.preventDefault();
+}, { passive: false });
+
 canvas.addEventListener("mouseup", (e) => {
 	events.push(new EventMouseUp(e.button));
-});
+	e.preventDefault();
+}, { passive: false });
 
 window.addEventListener("keydown", (e) => {
 	if (menu.visible) return;
@@ -2405,7 +2408,7 @@ window.addEventListener("keydown", (e) => {
 	events.push(new EventKeyDown(e.key));
 	// Hack: ignore function keys
 	if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.key.startsWith("F")) e.preventDefault();
-});
+}, { passive: false });
 
 window.addEventListener("wheel", (e) => {
 	if (menu.visible) return;
@@ -2413,7 +2416,7 @@ window.addEventListener("wheel", (e) => {
 	events.push(new EventMouseWheel([e.deltaX, e.deltaY]));
 
 	e.preventDefault();
-});
+}, { passive: false });
 
 canvas.addEventListener("mouseout", () => {
 	events.push(event_blur);
