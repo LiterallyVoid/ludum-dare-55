@@ -2407,7 +2407,7 @@ window.addEventListener("keydown", (e) => {
 	if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.key.startsWith("F")) e.preventDefault();
 });
 
-window.addEventListener("mousewheel", (e) => {
+window.addEventListener("wheel", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventMouseWheel([e.deltaX, e.deltaY]));
