@@ -650,7 +650,7 @@ class MortarBullet extends BoardEntity {
 		if (this.time <= 0) {
 			this.dead = true;
 
-			for (const entity of this.board.entitiesNear(this.relativePos, 0.3)) {
+			for (const entity of this.board.entitiesNear(this.relativePos, 0.5)) {
 				if (entity === this) continue;
 				if (entity.health) {
 					entity.onDamage(this.damage);
