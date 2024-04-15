@@ -2411,6 +2411,8 @@ window.addEventListener("mousewheel", (e) => {
 	if (menu.visible) return;
 
 	events.push(new EventMouseWheel([e.deltaX, e.deltaY]));
+
+	e.preventDefault();
 });
 
 canvas.addEventListener("mouseout", () => {
