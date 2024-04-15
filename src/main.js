@@ -636,7 +636,7 @@ class MortarBullet extends BoardEntity {
 
 		this.angle = angle;
 
-		this.damage = 1.5;
+		this.damage = 1.0;
 	}
 
 	update(delta) {
